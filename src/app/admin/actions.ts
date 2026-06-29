@@ -1,8 +1,8 @@
 "use server";
 
-import sharp from "sharp";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { optimizeToWebp } from "@/lib/image";
 import { ADMIN_COOKIE, createSessionToken, verifyCredentials } from "@/lib/auth";
 import { requireAdmin } from "@/lib/session";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -78,11 +78,7 @@ export async function uploadProductImage(
   if (!db) return { ok: false, error: "Stockage indisponible — configurez Supabase." };
   try {
     const input = Buffer.from(await file.arrayBuffer());
-    const optimized = await sharp(input)
-      .rotate()
-      .resize({ width: 1400, height: 1800, fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 82 })
-      .toBuffer();
+    const optimized = await optimizeToWebp(input, { maxWidth: 1400, maxHeight: 1800, quality: 80 });
     const name = `${crypto.randomUUID()}.webp`;
     const { error } = await db.storage
       .from("product-images")
