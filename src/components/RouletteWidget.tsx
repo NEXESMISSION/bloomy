@@ -299,8 +299,15 @@ function AccountForm({ winId, onSuccess }: { winId: string; onSuccess: () => voi
       <button type="submit" disabled={loading} className="btn-primary w-full">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "signup" ? "Créer mon compte & récupérer" : "Se connecter & récupérer"}
       </button>
-      <button type="button" onClick={() => setMode(mode === "signup" ? "login" : "signup")} className="w-full text-center text-xs text-muted hover:text-ink">
-        {mode === "signup" ? "Déjà un compte ? Se connecter" : "Pas de compte ? S'inscrire"}
+      <button
+        type="button"
+        onClick={() => setMode(mode === "signup" ? "login" : "signup")}
+        className="w-full rounded-xl border border-line py-2.5 text-center text-sm text-muted transition hover:bg-sand"
+      >
+        {mode === "signup" ? "Déjà un compte ? " : "Pas de compte ? "}
+        <span className="font-semibold text-ink underline underline-offset-2">
+          {mode === "signup" ? "Se connecter" : "S'inscrire"}
+        </span>
       </button>
     </form>
   );

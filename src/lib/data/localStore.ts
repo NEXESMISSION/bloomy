@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { SEED_PRODUCTS } from "./seed";
-import type { DiscountCode, Order, Product, Review, RoulettePrize, RouletteWin } from "@/lib/types";
+import type { Banner, DiscountCode, Order, Product, Review, RoulettePrize, RouletteWin } from "@/lib/types";
 
 /**
  * Stockage local sur fichier (.data/*.json) utilisé UNIQUEMENT en mode démo,
@@ -17,6 +17,7 @@ const REVIEWS_FILE = path.join(DIR, "reviews.json");
 const CUSTOMERS_FILE = path.join(DIR, "customers.json");
 const PRIZES_FILE = path.join(DIR, "roulette_prizes.json");
 const WINS_FILE = path.join(DIR, "roulette_wins.json");
+const BANNERS_FILE = path.join(DIR, "banners.json");
 
 async function ensureDir() {
   await fs.mkdir(DIR, { recursive: true });
@@ -113,4 +114,10 @@ export async function localGetWins(): Promise<RouletteWin[]> {
 }
 export async function localSaveWins(w: RouletteWin[]) {
   await writeJson(WINS_FILE, w);
+}
+export async function localGetBanners(): Promise<Banner[]> {
+  return readJson<Banner[]>(BANNERS_FILE, []);
+}
+export async function localSaveBanners(b: Banner[]) {
+  await writeJson(BANNERS_FILE, b);
 }

@@ -29,6 +29,18 @@ body {
   color: #fff;
 }
 
+/* Empêche le zoom automatique de Safari iOS au focus d'un champ
+   (déclenché quand la police du champ est < 16px). `.input` est ciblé
+   explicitement pour battre la spécificité de la classe. */
+@media (max-width: 640px) {
+  .input,
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-thumb { background: #d8d7d3; border-radius: 999px; border: 2px solid #fff; }
 ::-webkit-scrollbar-thumb:hover { background: #bfbeba; }

@@ -11,6 +11,7 @@ import {
   Tag,
   Star,
   Gift,
+  Images,
   Settings,
   ExternalLink,
   LogOut,
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
+  { label: "Bannières", href: "/admin/bannieres", icon: Images },
   { label: "Commandes", href: "/admin/commandes", icon: ShoppingCart },
   { label: "Produits", href: "/admin/produits", icon: Package },
   { label: "Codes promo", href: "/admin/codes", icon: Tag },

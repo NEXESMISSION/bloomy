@@ -129,6 +129,18 @@ export type RouletteWin = {
   claimed: boolean;
 };
 
+export type Banner = {
+  id: string;
+  created_at?: string;
+  image: string;
+  title: string | null;
+  subtitle: string | null;
+  cta_label: string | null;
+  cta_href: string | null;
+  sort_order: number;
+  active: boolean;
+};
+
 export type ReviewStatus = "pending" | "approved" | "rejected";
 
 export type Review = {

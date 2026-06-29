@@ -12,6 +12,7 @@ import { upsertCode, deleteCode, type DiscountInput } from "@/lib/data/discounts
 import { updateSettings } from "@/lib/data/settings";
 import { setReviewStatus, deleteReview } from "@/lib/data/reviews";
 import { upsertPrize, deletePrize, type PrizeInput } from "@/lib/data/roulette";
+import { upsertBanner, deleteBanner, type BannerInput } from "@/lib/data/banners";
 import type { OrderStatus, ReviewStatus, ShopSettings } from "@/lib/types";
 
 export async function login(
@@ -91,6 +92,30 @@ export async function uploadProductImage(
   }
 }
 
+/** Upload générique optimisé (bannières, etc.) — plus large pour le plein écran. */
+export async function uploadImage(
+  formData: FormData,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  await requireAdmin();
+  const file = formData.get("file") as File | null;
+  if (!file || typeof file === "string") return { ok: false, error: "Aucun fichier." };
+  const db = supabaseAdmin();
+  if (!db) return { ok: false, error: "Stockage indisponible — configurez Supabase." };
+  try {
+    const input = Buffer.from(await file.arrayBuffer());
+    const optimized = await optimizeToWebp(input, { maxWidth: 1920, maxHeight: 1920, quality: 82 });
+    const name = `${crypto.randomUUID()}.webp`;
+    const { error } = await db.storage
+      .from("product-images")
+      .upload(name, optimized, { contentType: "image/webp", upsert: false });
+    if (error) return { ok: false, error: error.message };
+    const { data } = db.storage.from("product-images").getPublicUrl(name);
+    return { ok: true, url: data.publicUrl };
+  } catch (e: any) {
+    return { ok: false, error: e?.message ?? "Échec de l'upload de l'image." };
+  }
+}
+
 /* ─────────────── Codes promo ─────────────── */
 
 export async function saveCode(input: DiscountInput) {
@@ -144,4 +169,21 @@ export async function removePrize(id: string) {
   await deletePrize(id);
   revalidatePath("/admin/roulette");
   revalidatePath("/", "layout");
+}
+
+/* ─────────────── Bannières (hero) ─────────────── */
+
+export async function saveBanner(input: BannerInput) {
+  await requireAdmin();
+  const banner = await upsertBanner(input);
+  revalidatePath("/admin/bannieres");
+  revalidatePath("/");
+  return banner;
+}
+
+export async function removeBanner(id: string) {
+  await requireAdmin();
+  await deleteBanner(id);
+  revalidatePath("/admin/bannieres");
+  revalidatePath("/");
 }
