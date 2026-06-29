@@ -3,6 +3,7 @@ import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/site";
 import NavProgress from "@/components/ui/NavProgress";
+import RegisterSW from "@/components/RegisterSW";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,6 +29,9 @@ export const metadata: Metadata = {
   },
   description: site.description,
   keywords: ["Bloomy", "parfum homme", "eau de toilette", "Tunisie", "Sauvage", "Bleu de Chanel"],
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Bloomy", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
   openGraph: {
     title: `${site.name} — Parfums pour homme`,
     description: site.description,
@@ -44,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${inter.variable} ${fraunces.variable}`}>
       <body>
+        <RegisterSW />
         <NavProgress />
         {children}
       </body>

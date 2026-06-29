@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SourceTracker from "@/components/SourceTracker";
 import RouletteWidget from "@/components/RouletteWidget";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import { CartProvider } from "@/context/cart";
 import { getSettings } from "@/lib/data/settings";
 import { getActivePrizes } from "@/lib/data/roulette";
@@ -30,6 +31,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         <CartDrawer />
       </div>
       {settings.roulette_enabled && <RouletteWidget prizes={prizes} isLoggedIn={!!customer} />}
+      <WhatsAppButton phone={settings.shop_phone} />
     </CartProvider>
   );
 }

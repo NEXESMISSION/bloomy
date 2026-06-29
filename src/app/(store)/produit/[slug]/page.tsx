@@ -6,6 +6,7 @@ import { getProductBySlug, getProducts } from "@/lib/data/products";
 import { getApprovedReviews, getReviewStats } from "@/lib/data/reviews";
 import { getSettings } from "@/lib/data/settings";
 import { formatTND, inspirationOf, formatDateFR, cn } from "@/lib/utils";
+import { site } from "@/lib/site";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 import ReviewForm from "@/components/ReviewForm";
@@ -14,7 +15,14 @@ import ProductGallery from "@/components/ProductGallery";
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const product = await getProductBySlug(params.slug);
   if (!product) return { title: "Produit introuvable" };
-  return { title: product.name, description: `${product.tagline} 50ml.` };
+  const image = product.image?.startsWith("http") ? product.image : `${site.url}${product.image}`;
+  const description = `${product.tagline} — Eau de toilette 50 ml · ${product.family}.`.slice(0, 160);
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: `${site.url}/produit/${product.slug}` },
+    openGraph: { title: product.name, description, images: [image], type: "website" },
+  };
 }
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
@@ -41,8 +49,29 @@ export default async function ProductPage({ params }: { params: { slug: string }
     { label: "Fond", notes: product.notes_base },
   ];
 
+  const imageUrl = product.image?.startsWith("http") ? product.image : `${site.url}${product.image}`;
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.name,
+    image: [imageUrl],
+    description: product.description || product.tagline,
+    brand: { "@type": "Brand", name: "Bloomy" },
+    offers: {
+      "@type": "Offer",
+      url: `${site.url}/produit/${product.slug}`,
+      priceCurrency: "TND",
+      price: product.price,
+      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    },
+    ...(stats.count > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: stats.avg, reviewCount: stats.count } }
+      : {}),
+  };
+
   return (
     <div className="container-bloomy py-6 sm:py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <nav className="flex items-center gap-1.5 py-3 text-xs text-muted">
         <Link href="/" className="hover:text-ink">Accueil</Link>
         <ChevronRight className="h-3 w-3" />
