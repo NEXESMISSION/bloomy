@@ -11,6 +11,7 @@ import { upsertProduct, deleteProduct, type ProductInput } from "@/lib/data/prod
 import { upsertCode, deleteCode, type DiscountInput } from "@/lib/data/discounts";
 import { updateSettings } from "@/lib/data/settings";
 import { setReviewStatus, deleteReview } from "@/lib/data/reviews";
+import { upsertPrize, deletePrize, type PrizeInput } from "@/lib/data/roulette";
 import type { OrderStatus, ReviewStatus, ShopSettings } from "@/lib/types";
 
 export async function login(
@@ -130,4 +131,21 @@ export async function removeReview(id: string) {
   await requireAdmin();
   await deleteReview(id);
   revalidatePath("/admin/avis");
+}
+
+/* ─────────────── Roulette ─────────────── */
+
+export async function savePrize(input: PrizeInput) {
+  await requireAdmin();
+  const prize = await upsertPrize(input);
+  revalidatePath("/admin/roulette");
+  revalidatePath("/", "layout");
+  return prize;
+}
+
+export async function removePrize(id: string) {
+  await requireAdmin();
+  await deletePrize(id);
+  revalidatePath("/admin/roulette");
+  revalidatePath("/", "layout");
 }

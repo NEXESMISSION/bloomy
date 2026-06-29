@@ -9,6 +9,7 @@ const DEFAULTS: ShopSettings = {
   shop_phone: process.env.NEXT_PUBLIC_SHOP_PHONE || "21600000000",
   announcement: "🚚 Livraison partout en Tunisie · Paiement à la livraison",
   reviews_enabled: true,
+  roulette_enabled: true,
 };
 
 function num(v: any, fallback: number) {
@@ -23,6 +24,7 @@ function fromMap(map: Record<string, string>): ShopSettings {
     shop_phone: map.shop_phone || DEFAULTS.shop_phone,
     announcement: map.announcement ?? DEFAULTS.announcement,
     reviews_enabled: map.reviews_enabled !== "false",
+    roulette_enabled: map.roulette_enabled !== "false",
   };
 }
 

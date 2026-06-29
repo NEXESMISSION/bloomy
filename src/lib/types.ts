@@ -91,6 +91,42 @@ export type ShopSettings = {
   shop_phone: string;
   announcement: string;
   reviews_enabled: boolean;
+  roulette_enabled: boolean;
+};
+
+export type Customer = {
+  id: string;
+  created_at?: string;
+  name: string;
+  phone: string;
+  email: string | null;
+};
+
+export type RoulettePrizeType = "code" | "product" | "none";
+
+export type RoulettePrize = {
+  id: string;
+  created_at?: string;
+  label: string;
+  type: RoulettePrizeType;
+  code: string | null;
+  product_name: string | null;
+  weight: number;
+  color: string;
+  active: boolean;
+  sort_order: number;
+};
+
+export type RouletteWin = {
+  id: string;
+  created_at: string;
+  prize_id: string | null;
+  prize_label: string;
+  type: RoulettePrizeType;
+  code: string | null;
+  customer_id: string | null;
+  phone: string | null;
+  claimed: boolean;
 };
 
 export type ReviewStatus = "pending" | "approved" | "rejected";

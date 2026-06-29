@@ -3,11 +3,18 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SourceTracker from "@/components/SourceTracker";
+import RouletteWidget from "@/components/RouletteWidget";
 import { CartProvider } from "@/context/cart";
 import { getSettings } from "@/lib/data/settings";
+import { getActivePrizes } from "@/lib/data/roulette";
+import { getCurrentCustomer } from "@/lib/customerSession";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getSettings();
+  const [settings, prizes, customer] = await Promise.all([
+    getSettings(),
+    getActivePrizes(),
+    getCurrentCustomer(),
+  ]);
   return (
     <CartProvider
       baseDeliveryFee={settings.delivery_fee}
@@ -22,6 +29,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         <Footer />
         <CartDrawer />
       </div>
+      {settings.roulette_enabled && <RouletteWidget prizes={prizes} isLoggedIn={!!customer} />}
     </CartProvider>
   );
 }

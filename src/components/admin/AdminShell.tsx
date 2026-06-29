@@ -10,6 +10,7 @@ import {
   Package,
   Tag,
   Star,
+  Gift,
   Settings,
   ExternalLink,
   LogOut,
@@ -24,6 +25,7 @@ const NAV = [
   { label: "Commandes", href: "/admin/commandes", icon: ShoppingCart },
   { label: "Produits", href: "/admin/produits", icon: Package },
   { label: "Codes promo", href: "/admin/codes", icon: Tag },
+  { label: "Roulette", href: "/admin/roulette", icon: Gift },
   { label: "Avis", href: "/admin/avis", icon: Star },
   { label: "Paramètres", href: "/admin/parametres", icon: Settings },
 ];

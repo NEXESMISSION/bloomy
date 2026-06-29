@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { SEED_PRODUCTS } from "./seed";
-import type { DiscountCode, Order, Product, Review } from "@/lib/types";
+import type { DiscountCode, Order, Product, Review, RoulettePrize, RouletteWin } from "@/lib/types";
 
 /**
  * Stockage local sur fichier (.data/*.json) utilisé UNIQUEMENT en mode démo,
@@ -14,6 +14,9 @@ const ORDERS_FILE = path.join(DIR, "orders.json");
 const CODES_FILE = path.join(DIR, "discounts.json");
 const SETTINGS_FILE = path.join(DIR, "settings.json");
 const REVIEWS_FILE = path.join(DIR, "reviews.json");
+const CUSTOMERS_FILE = path.join(DIR, "customers.json");
+const PRIZES_FILE = path.join(DIR, "roulette_prizes.json");
+const WINS_FILE = path.join(DIR, "roulette_wins.json");
 
 async function ensureDir() {
   await fs.mkdir(DIR, { recursive: true });
@@ -88,4 +91,23 @@ export async function localGetReviews(): Promise<Review[]> {
 
 export async function localSaveReviews(reviews: Review[]) {
   await writeJson(REVIEWS_FILE, reviews);
+}
+
+export async function localGetCustomers(): Promise<any[]> {
+  return readJson<any[]>(CUSTOMERS_FILE, []);
+}
+export async function localSaveCustomers(c: any[]) {
+  await writeJson(CUSTOMERS_FILE, c);
+}
+export async function localGetPrizes(): Promise<RoulettePrize[]> {
+  return readJson<RoulettePrize[]>(PRIZES_FILE, []);
+}
+export async function localSavePrizes(p: RoulettePrize[]) {
+  await writeJson(PRIZES_FILE, p);
+}
+export async function localGetWins(): Promise<RouletteWin[]> {
+  return readJson<RouletteWin[]>(WINS_FILE, []);
+}
+export async function localSaveWins(w: RouletteWin[]) {
+  await writeJson(WINS_FILE, w);
 }
