@@ -135,7 +135,18 @@ export default function Hero({ banners }: { banners: Banner[] }) {
               animate="center"
               exit="exit"
               transition={{ duration: 0.6, ease }}
-              className="absolute inset-0"
+              drag={slides.length > 1 ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.16}
+              onDragStart={() => (paused.current = true)}
+              onDragEnd={(_, info) => {
+                const swipe = info.offset.x;
+                const power = info.velocity.x;
+                if (swipe < -60 || power < -500) go(index + 1, 1);
+                else if (swipe > 60 || power > 500) go(index - 1, -1);
+                paused.current = false;
+              }}
+              className="absolute inset-0 cursor-grab touch-pan-y active:cursor-grabbing"
             >
               <Slide slide={slide} priority={index === 0} />
             </motion.div>
