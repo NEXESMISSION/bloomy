@@ -122,13 +122,19 @@ export default function RouletteWidget({ prizes, isLoggedIn }: { prizes: Roulett
 
       <AnimatePresence>
         {open && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close} className="fixed inset-0 z-[70] bg-ink/50 backdrop-blur-sm" />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center sm:p-4"
+          >
+            <div onClick={close} className="absolute inset-0 bg-ink/50 backdrop-blur-sm" />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-x-0 bottom-0 z-[71] mx-auto max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-paper p-6 sm:inset-0 sm:bottom-auto sm:top-1/2 sm:my-0 sm:-translate-y-1/2 sm:rounded-3xl sm:p-8"
+              exit={{ opacity: 0, scale: 0.96, y: 24 }}
+              transition={{ type: "spring", duration: 0.5, bounce: 0.18 }}
+              className="relative z-10 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-paper p-6 sm:rounded-3xl sm:p-8"
             >
               <button onClick={close} className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-line text-ink hover:bg-sand" aria-label="Fermer">
                 <X className="h-5 w-5" />
@@ -196,7 +202,7 @@ export default function RouletteWidget({ prizes, isLoggedIn }: { prizes: Roulett
                 <Result result={result} revealed={revealed} onClaimed={markClaimed} />
               )}
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
