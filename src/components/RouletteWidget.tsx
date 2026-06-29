@@ -93,21 +93,32 @@ export default function RouletteWidget({ prizes, isLoggedIn }: { prizes: Roulett
         setRevealed(true);
         savePlay(res, true);
       }
-    }, 4700);
+    }, 4900);
   };
 
   return (
     <>
-      <button
+      <motion.button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-semibold text-white shadow-pop transition hover:bg-ink-80"
+        initial={{ opacity: 0, y: 16, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-semibold text-white shadow-pop hover:bg-ink-80"
         aria-label="Roue de la chance"
       >
-        <motion.span animate={{ rotate: [0, -12, 12, 0] }} transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.2 }}>
+        <span className="relative grid place-items-center">
           <Gift className="h-5 w-5" />
-        </motion.span>
+          {!played && (
+            <span className="absolute -right-1.5 -top-1.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+            </span>
+          )}
+        </span>
         <span className="hidden sm:inline">{played ? "Mon lot" : "Tentez votre chance"}</span>
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {open && (
@@ -135,19 +146,35 @@ export default function RouletteWidget({ prizes, isLoggedIn }: { prizes: Roulett
                 </div>
                 <div
                   className="h-full w-full rounded-full shadow-card ring-4 ring-ink/90"
-                  style={{ transform: `rotate(${rotation}deg)`, transition: spinning ? "transform 4.5s cubic-bezier(0.16,1,0.3,1)" : "none" }}
+                  style={{
+                    transform: `rotate(${rotation}deg)`,
+                    transition: spinning ? "transform 4.8s cubic-bezier(0.17,0.67,0.16,1)" : "none",
+                    willChange: "transform",
+                  }}
                 >
                   <svg viewBox="0 0 200 200" className="h-full w-full">
                     {prizes.map((p, i) => {
+                      const mid = i * seg + seg / 2;
                       const [x1, y1] = ptOnCircle(100, 100, 100, i * seg);
                       const [x2, y2] = ptOnCircle(100, 100, 100, (i + 1) * seg);
                       const large = seg > 180 ? 1 : 0;
-                      const [lx, ly] = ptOnCircle(100, 100, 62, i * seg + seg / 2);
+                      // Label radiates from the centre and is flipped upright on the left half.
+                      const [lx, ly] = ptOnCircle(100, 100, 60, mid);
+                      const flip = mid > 90 && mid < 270 ? 180 : 0;
                       return (
                         <g key={p.id}>
-                          <path d={`M100,100 L${x1},${y1} A100,100 0 ${large} 1 ${x2},${y2} Z`} fill={p.color} stroke="#fff" strokeWidth="1" />
-                          <text x={lx} y={ly} fill="#fff" fontSize="9" fontWeight="700" textAnchor="middle" dominantBaseline="middle" transform={`rotate(${i * seg + seg / 2} ${lx} ${ly})`}>
-                            {p.label.slice(0, 16)}
+                          <path d={`M100,100 L${x1},${y1} A100,100 0 ${large} 1 ${x2},${y2} Z`} fill={p.color} stroke="#fff" strokeWidth="1.5" />
+                          <text
+                            x={lx}
+                            y={ly}
+                            fill="#fff"
+                            fontSize="9"
+                            fontWeight="700"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            transform={`rotate(${mid + flip} ${lx} ${ly})`}
+                          >
+                            {p.label.slice(0, 14)}
                           </text>
                         </g>
                       );

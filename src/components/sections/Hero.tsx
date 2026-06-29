@@ -27,7 +27,7 @@ export default function Hero() {
         >
           Vos parfums préférés,
           <br />
-          <span className="text-muted">à prix Bloomy.</span>
+          <span className="italic text-muted">à prix Bloomy.</span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -60,7 +60,11 @@ export default function Hero() {
         transition={{ duration: 0.7, ease, delay: 0.2 }}
         className="mt-10 overflow-hidden rounded-3xl bg-surface sm:mt-14"
       >
-        <div className="relative mx-auto aspect-[5/4] w-full sm:aspect-[16/8]">
+        <motion.div
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="relative mx-auto aspect-[5/4] w-full sm:aspect-[16/8]"
+        >
           <Image
             src="/photos/lineup.png"
             alt="La collection Bloomy"
@@ -69,7 +73,7 @@ export default function Hero() {
             sizes="(max-width:640px) 100vw, 1100px"
             className="object-contain"
           />
-        </div>
+        </motion.div>
       </motion.div>
     </section>
   );

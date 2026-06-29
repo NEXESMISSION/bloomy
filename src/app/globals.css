@@ -35,9 +35,10 @@ body {
 
 @layer base {
   h1, h2, h3, h4 {
-    font-family: var(--font-display), system-ui, sans-serif;
-    letter-spacing: -0.02em;
-    font-weight: 600;
+    font-family: var(--font-display), Georgia, serif;
+    letter-spacing: -0.01em;
+    font-weight: 500;
+    line-height: 1.08;
     color: #17171b;
   }
 }

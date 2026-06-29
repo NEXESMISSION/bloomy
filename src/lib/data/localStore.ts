@@ -46,8 +46,11 @@ async function readJson<T>(file: string, fallback: T): Promise<T> {
 }
 
 async function writeJson(file: string, data: unknown) {
-  await ensureDir();
-  await fs.writeFile(file, JSON.stringify(data, null, 2), "utf8");
+  // Best-effort : sur un FS en lecture seule (Vercel sans Supabase), on n'échoue pas.
+  try {
+    await ensureDir();
+    await fs.writeFile(file, JSON.stringify(data, null, 2), "utf8");
+  } catch {}
 }
 
 export async function localGetProducts(): Promise<Product[]> {

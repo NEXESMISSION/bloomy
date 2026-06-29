@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
+import { Reveal } from "@/components/ui/Reveal";
 
 const FAQS = [
   {
@@ -32,10 +33,12 @@ export default function FAQ() {
   return (
     <section className="container-bloomy py-16 sm:py-20">
       <div className="mx-auto max-w-3xl">
-        <div className="text-center">
-          <span className="eyebrow">Questions fréquentes</span>
-          <h2 className="mt-3 text-3xl sm:text-4xl">On répond à tout.</h2>
-        </div>
+        <Reveal>
+          <div className="text-center">
+            <span className="eyebrow">Questions fréquentes</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl">On répond à tout.</h2>
+          </div>
+        </Reveal>
 
         <div className="mt-10 divide-y divide-line border-y border-line">
           {FAQS.map((f, i) => {

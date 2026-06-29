@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/context/cart";
 import { formatTND, inspirationOf } from "@/lib/utils";
 import BottleShot from "@/components/ui/BottleShot";
 
-export default function ProductCard({ product }: { product: Product; index?: number }) {
+export default function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { add } = useCart();
   const discount =
     product.compare_at_price && product.compare_at_price > product.price
@@ -15,13 +16,19 @@ export default function ProductCard({ product }: { product: Product; index?: num
       : 0;
 
   return (
-    <div className="group">
+    <motion.div
+      initial={{ opacity: 0, y: 26 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.55, delay: (index % 4) * 0.08, ease: [0.22, 1, 0.36, 1] }}
+      className="group"
+    >
       <Link href={`/produit/${product.slug}`} className="relative block aspect-[4/5] overflow-hidden rounded-2xl">
         <BottleShot
           src={product.image}
           alt={product.name}
           sizes="(max-width:640px) 50vw, 25vw"
-          className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.03]"
+          className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.06]"
         />
         {discount > 0 && (
           <span className="absolute left-3 top-3 rounded-full bg-ink px-2.5 py-1 text-[11px] font-semibold text-white">
@@ -34,13 +41,13 @@ export default function ProductCard({ product }: { product: Product; index?: num
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <Link href={`/produit/${product.slug}`}>
-              <h3 className="truncate text-[15px] font-semibold text-ink">{product.name}</h3>
+              <h3 className="truncate font-display text-[17px] font-semibold text-ink">{product.name}</h3>
             </Link>
             <p className="truncate text-xs text-muted">{inspirationOf(product)}</p>
           </div>
           <button
             onClick={() => add(product)}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white transition hover:bg-ink-80 active:scale-95"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white transition hover:scale-105 hover:bg-ink-80 active:scale-95"
             aria-label={`Ajouter ${product.name}`}
           >
             <Plus className="h-[18px] w-[18px]" />
@@ -53,6 +60,6 @@ export default function ProductCard({ product }: { product: Product; index?: num
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
