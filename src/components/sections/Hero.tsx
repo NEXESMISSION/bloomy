@@ -14,6 +14,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 const DEFAULT_BANNER: Banner = {
   id: "default",
   image: "/photos/lineup.png",
+  mobile_image: null,
   title: "Vos parfums préférés, à prix Bloomy.",
   subtitle: "Quatre eaux de toilette inspirées des plus grands · Livraison partout en Tunisie.",
   cta_label: "Découvrir la collection",
@@ -30,15 +31,28 @@ const variants = {
 
 function Slide({ slide, priority }: { slide: Banner; priority: boolean }) {
   const hasText = !!(slide.title || slide.subtitle || slide.cta_label);
-  const img = (
-    <Image
-      src={slide.image}
-      alt={slide.title ?? "Bannière Bloomy"}
-      fill
-      priority={priority}
-      sizes="(max-width:640px) 100vw, 1200px"
-      className="object-cover"
-    />
+  const alt = slide.title ?? "Bannière Bloomy";
+  // Image desktop (paysage) + image mobile dédiée (portrait, sinon repli desktop).
+  // Les `sizes` à 0px côté masqué évitent de télécharger l'image cachée.
+  const picture = (
+    <>
+      <Image
+        src={slide.image}
+        alt={alt}
+        fill
+        priority={priority}
+        sizes="(max-width:640px) 0px, 1200px"
+        className="hidden object-cover sm:block"
+      />
+      <Image
+        src={slide.mobile_image || slide.image}
+        alt={alt}
+        fill
+        priority={priority}
+        sizes="(max-width:640px) 100vw, 0px"
+        className="object-cover sm:hidden"
+      />
+    </>
   );
 
   return (
@@ -46,10 +60,10 @@ function Slide({ slide, priority }: { slide: Banner; priority: boolean }) {
       {/* Image plein cadre. Cliquable si un lien est défini et qu'il n'y a pas de bouton. */}
       {slide.cta_href && !hasText ? (
         <Link href={slide.cta_href} className="absolute inset-0">
-          {img}
+          {picture}
         </Link>
       ) : (
-        img
+        picture
       )}
 
       {hasText && (

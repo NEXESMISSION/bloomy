@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const BLANK: Banner = {
   id: "",
   image: "",
+  mobile_image: "",
   title: "",
   subtitle: "",
   cta_label: "",
@@ -132,21 +133,21 @@ function BannerModal({
 
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState<string | null>(null);
-  const upload = async (file: File) => {
+  const upload = async (file: File, field: "image" | "mobile_image") => {
     setUploadErr(null);
     setUploading(true);
     const fd = new FormData();
     fd.append("file", file);
     const res = await uploadImage(fd);
     setUploading(false);
-    if (res.ok) set({ image: res.url });
+    if (res.ok) set({ [field]: res.url });
     else setUploadErr(res.error);
   };
 
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center p-4">
       <div className="absolute inset-0 bg-ink/40" onClick={onClose} />
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-line bg-white p-6 shadow-pop sm:p-8">
+      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-line bg-white p-6 shadow-pop sm:p-8">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-ink">{isNew ? "Nouvelle bannière" : "Modifier la bannière"}</h2>
           <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full border border-line text-muted hover:text-ink">
@@ -155,27 +156,57 @@ function BannerModal({
         </div>
 
         <div className="grid gap-4">
-          <L label="Image de la bannière (optimisée automatiquement)">
-            <div className="relative mb-2 aspect-[16/9] w-full overflow-hidden rounded-xl bg-surface">
-              {form.image && <Image src={form.image} alt="" fill className="object-contain" sizes="480px" />}
-            </div>
-            <label className="btn-outline inline-flex cursor-pointer">
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-              Téléverser une image
+          <div className="grid gap-4 sm:grid-cols-2">
+            <L label="Image desktop · paysage 16:7 (≈ 1920×840)">
+              <div className="relative mb-2 aspect-[16/7] w-full overflow-hidden rounded-xl bg-surface">
+                {form.image && <Image src={form.image} alt="" fill className="object-cover" sizes="420px" />}
+              </div>
+              <label className="btn-outline inline-flex w-full cursor-pointer justify-center">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                Téléverser
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (f) await upload(f, "image");
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <input className="input mt-2" value={form.image} onChange={(e) => set({ image: e.target.value })} placeholder="ou URL d'image" />
+            </L>
+
+            <L label="Image mobile · portrait 4:5 (≈ 1080×1350) — optionnel">
+              <div className="relative mx-auto mb-2 aspect-[4/5] w-1/2 overflow-hidden rounded-xl bg-surface sm:w-full">
+                {(form.mobile_image || form.image) && (
+                  <Image src={form.mobile_image || form.image} alt="" fill className="object-cover" sizes="240px" />
+                )}
+              </div>
+              <label className="btn-outline inline-flex w-full cursor-pointer justify-center">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                Téléverser
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (f) await upload(f, "mobile_image");
+                    e.target.value = "";
+                  }}
+                />
+              </label>
               <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (f) await upload(f);
-                  e.target.value = "";
-                }}
+                className="input mt-2"
+                value={form.mobile_image ?? ""}
+                onChange={(e) => set({ mobile_image: e.target.value })}
+                placeholder="vide = utilise l'image desktop"
               />
-            </label>
-            <input className="input mt-2" value={form.image} onChange={(e) => set({ image: e.target.value })} placeholder="ou collez une URL d'image" />
-            {uploadErr && <p className="mt-1 text-xs text-red-600">{uploadErr}</p>}
-          </L>
+            </L>
+          </div>
+          {uploadErr && <p className="text-xs text-red-600">{uploadErr}</p>}
 
           <L label="Titre (facultatif)">
             <input className="input" value={form.title ?? ""} onChange={(e) => set({ title: e.target.value })} />

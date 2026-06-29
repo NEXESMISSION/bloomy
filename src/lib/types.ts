@@ -132,7 +132,8 @@ export type RouletteWin = {
 export type Banner = {
   id: string;
   created_at?: string;
-  image: string;
+  image: string; // image desktop (large / paysage)
+  mobile_image: string | null; // image mobile dédiée (portrait), optionnelle
   title: string | null;
   subtitle: string | null;
   cta_label: string | null;

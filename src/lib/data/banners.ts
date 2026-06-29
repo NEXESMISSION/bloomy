@@ -7,6 +7,7 @@ function mapBanner(r: any): Banner {
     id: r.id,
     created_at: r.created_at,
     image: r.image,
+    mobile_image: r.mobile_image ?? null,
     title: r.title ?? null,
     subtitle: r.subtitle ?? null,
     cta_label: r.cta_label ?? null,
@@ -52,6 +53,7 @@ export async function upsertBanner(input: BannerInput): Promise<Banner> {
   }
   const row: any = {
     image: input.image,
+    mobile_image: input.mobile_image,
     title: input.title,
     subtitle: input.subtitle,
     cta_label: input.cta_label,
