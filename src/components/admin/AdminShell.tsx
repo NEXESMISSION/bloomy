@@ -7,6 +7,7 @@ import { useState } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
+  Users,
   Package,
   Tag,
   Star,
@@ -26,6 +27,7 @@ const NAV = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
   { label: "Bannières", href: "/admin/bannieres", icon: Images },
   { label: "Commandes", href: "/admin/commandes", icon: ShoppingCart },
+  { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Produits", href: "/admin/produits", icon: Package },
   { label: "Codes promo", href: "/admin/codes", icon: Tag },
   { label: "Roulette", href: "/admin/roulette", icon: Gift },

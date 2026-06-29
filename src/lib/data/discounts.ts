@@ -119,6 +119,13 @@ export async function upsertCode(input: DiscountInput): Promise<DiscountCode> {
           return codes[idx];
         }
       }
+      // Création : dédoublonnage sur le code (met à jour si déjà présent).
+      const existing = codes.findIndex((c) => c.code.toUpperCase() === code);
+      if (existing >= 0) {
+        codes[existing] = { ...codes[existing], ...input, code, id: codes[existing].id } as DiscountCode;
+        await localSaveCodes(codes);
+        return codes[existing];
+      }
       const created: DiscountCode = {
         id: crypto.randomUUID(),
         created_at: new Date().toISOString(),
@@ -137,7 +144,7 @@ export async function upsertCode(input: DiscountInput): Promise<DiscountCode> {
       return created;
     });
   }
-  const row: any = {
+  const fields = {
     code,
     type: input.type,
     value: input.value,
@@ -147,8 +154,19 @@ export async function upsertCode(input: DiscountInput): Promise<DiscountCode> {
     active: input.active,
     expires_at: input.expires_at,
   };
-  if (input.id) row.id = input.id;
-  const { data, error } = await db.from("discount_codes").upsert(row).select("*").single();
+
+  // Édition → update par id. Création → upsert sur `code` : un même code ne peut
+  // JAMAIS être dupliqué (s'il existe déjà, il est mis à jour au lieu d'en créer un 2e).
+  if (input.id) {
+    const { data, error } = await db.from("discount_codes").update(fields).eq("id", input.id).select("*").single();
+    if (error) throw new Error(error.message);
+    return mapCode(data);
+  }
+  const { data, error } = await db
+    .from("discount_codes")
+    .upsert(fields, { onConflict: "code" })
+    .select("*")
+    .single();
   if (error) throw new Error(error.message);
   return mapCode(data);
 }
