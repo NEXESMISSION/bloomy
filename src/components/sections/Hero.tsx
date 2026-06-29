@@ -168,23 +168,26 @@ export default function Hero({ banners }: { banners: Banner[] }) {
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
-              <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-                {slides.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => go(i, i > index ? 1 : -1)}
-                    aria-label={`Bannière ${i + 1}`}
-                    className={cn(
-                      "h-2 rounded-full transition-all",
-                      i === index ? "w-5 bg-white" : "w-2 bg-white/50 hover:bg-white/80",
-                    )}
-                  />
-                ))}
-              </div>
             </>
           )}
         </div>
       </motion.div>
+
+      {slides.length > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => go(i, i > index ? 1 : -1)}
+              aria-label={`Bannière ${i + 1}`}
+              className={cn(
+                "h-2 rounded-full transition-all duration-300",
+                i === index ? "w-6 bg-ink" : "w-2 bg-ink/25 hover:bg-ink/40",
+              )}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

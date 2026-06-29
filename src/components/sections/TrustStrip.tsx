@@ -13,11 +13,13 @@ export default function TrustStrip() {
       <div className="container-bloomy grid divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         {ITEMS.map((i, idx) => (
           <Reveal key={i.title} delay={idx * 0.08} y={14}>
-            <div className="flex items-center gap-3 py-5 sm:justify-center">
-              <i.icon className="h-5 w-5 shrink-0 text-ink" strokeWidth={1.6} />
+            <div className="flex items-center gap-4 py-7 sm:justify-center sm:py-8">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-ink">
+                <i.icon className="h-5 w-5" strokeWidth={1.6} />
+              </span>
               <div>
                 <p className="text-sm font-semibold text-ink">{i.title}</p>
-                <p className="text-xs text-muted">{i.sub}</p>
+                <p className="mt-0.5 text-xs text-muted">{i.sub}</p>
               </div>
             </div>
           </Reveal>
