@@ -152,7 +152,12 @@ function PrizeModal({ prize, pending, onClose, onSave }: { prize: RoulettePrize;
               <option value="none">Aucun (rejoue)</option>
             </select>
           </L>
-          {form.type === "code" && <L label="Code promo accordé"><input className="input uppercase" value={form.code ?? ""} onChange={(e) => set({ code: e.target.value.toUpperCase() })} placeholder="Ex : BLOOMY10" /></L>}
+          {form.type === "code" && (
+            <L label="Code modèle (chaque gagnant reçoit un code UNIQUE à usage unique)">
+              <input className="input uppercase" value={form.code ?? ""} onChange={(e) => set({ code: e.target.value.toUpperCase() })} placeholder="Ex : BLOOMY10" />
+              <span className="mt-1 block text-xs text-muted">La remise de ce code est copiée. Le gagnant obtient un code dédié (max. 1 utilisation), pas ce code-ci.</span>
+            </L>
+          )}
           {form.type === "product" && <L label="Nom du cadeau"><input className="input" value={form.product_name ?? ""} onChange={(e) => set({ product_name: e.target.value })} placeholder="Ex : Parfum 50ml offert" /></L>}
           <div className="grid grid-cols-2 gap-4">
             <L label="Poids (probabilité)"><input type="number" className="input" value={form.weight} onChange={(e) => set({ weight: Number(e.target.value) })} /></L>

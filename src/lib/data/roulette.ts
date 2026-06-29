@@ -6,7 +6,8 @@ import {
   localSaveWins,
   withStoreLock,
 } from "@/lib/data/localStore";
-import type { RoulettePrize, RouletteWin } from "@/lib/types";
+import { getCodeByCode, mintSingleUseCode } from "@/lib/data/discounts";
+import type { DiscountType, RoulettePrize, RouletteWin } from "@/lib/types";
 
 function mapPrize(r: any): RoulettePrize {
   return {
@@ -62,12 +63,44 @@ export async function spinForPrize(): Promise<RoulettePrize | null> {
   return prizes[prizes.length - 1];
 }
 
+/**
+ * Pour un lot de type "code", génère un code promo UNIQUE à usage unique
+ * (non partageable). La remise est déduite du code "modèle" référencé par le
+ * lot (ex. INSTA15 = -15%), avec repli sur le libellé (ex. "-15%").
+ */
+async function resolveWinCode(prize: RoulettePrize): Promise<string | null> {
+  if (prize.type !== "code") return prize.code;
+
+  let type: DiscountType = "percent";
+  let value = 0;
+  let minSubtotal = 0;
+
+  if (prize.code) {
+    const template = await getCodeByCode(prize.code);
+    if (template) {
+      type = template.type;
+      value = template.value;
+      minSubtotal = template.min_subtotal;
+    }
+  }
+  if (!value) {
+    const m = (prize.label || "").match(/(\d+(?:[.,]\d+)?)/);
+    if (m) value = Number(m[1].replace(",", "."));
+    type = /%/.test(prize.label || "") ? "percent" : type;
+  }
+  if (!value) return prize.code; // impossible à déterminer → repli sur le code statique
+
+  const minted = await mintSingleUseCode({ type, value, min_subtotal: minSubtotal, source: "Roulette" });
+  return minted.code;
+}
+
 export async function recordWin(prize: RoulettePrize): Promise<RouletteWin> {
+  const wonCode = await resolveWinCode(prize);
   const row = {
     prize_id: prize.id,
     prize_label: prize.label,
     type: prize.type,
-    code: prize.code,
+    code: wonCode,
     customer_id: null as string | null,
     phone: null as string | null,
     claimed: false,

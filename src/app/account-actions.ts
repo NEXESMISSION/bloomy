@@ -35,7 +35,7 @@ export async function spin(): Promise<SpinResult> {
       prizeId: prize.id,
       label: prize.label,
       type: prize.type,
-      code: prize.code,
+      code: win.code, // code UNIQUE à usage unique généré pour ce gain
       productName: prize.product_name,
     };
   } catch (e: any) {

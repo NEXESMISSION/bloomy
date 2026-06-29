@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { localGetCodes, localSaveCodes, withStoreLock } from "@/lib/data/localStore";
 import { formatTND } from "@/lib/utils";
-import type { DiscountCode } from "@/lib/types";
+import type { DiscountCode, DiscountType } from "@/lib/types";
 
 function mapCode(r: any): DiscountCode {
   return {
@@ -162,4 +162,45 @@ export async function deleteCode(id: string): Promise<void> {
   }
   const { error } = await db.from("discount_codes").delete().eq("id", id);
   if (error) throw new Error(error.message);
+}
+
+/* ───────────────────────── codes à usage unique ───────────────────────── */
+
+// Sans caractères ambigus (O/0, I/L/1) pour faciliter la saisie.
+const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function randomChars(n: number): string {
+  let s = "";
+  for (let i = 0; i < n; i++) s += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  return s;
+}
+
+/**
+ * Crée un code promo UNIQUE à usage unique (max_uses = 1). Utilisé par la
+ * roulette pour que chaque gagnant reçoive son propre code non partageable.
+ */
+export async function mintSingleUseCode(opts: {
+  type: DiscountType;
+  value: number;
+  min_subtotal?: number;
+  source?: string;
+  expiresInDays?: number;
+}): Promise<DiscountCode> {
+  const prefix = `BL${Math.round(opts.value)}`;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const candidate = `${prefix}${randomChars(5)}`.toUpperCase();
+    if (await getCodeByCode(candidate)) continue; // collision (rare) → réessaie
+    return upsertCode({
+      code: candidate,
+      type: opts.type,
+      value: opts.value,
+      max_uses: 1,
+      min_subtotal: opts.min_subtotal ?? 0,
+      source: opts.source ?? "Roulette",
+      active: true,
+      expires_at: opts.expiresInDays
+        ? new Date(Date.now() + opts.expiresInDays * 86400000).toISOString()
+        : null,
+    });
+  }
+  throw new Error("Impossible de générer un code unique.");
 }
