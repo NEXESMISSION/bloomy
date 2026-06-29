@@ -8,32 +8,41 @@ import { spin, signup, login, claimCurrentWin, type SpinResult } from "@/app/acc
 import { cn } from "@/lib/utils";
 
 const SEEN_KEY = "bloomy_roulette_seen";
+const PLAY_KEY = "bloomy_roulette_play"; // {result, claimed} — 1 seul tour autorisé
 
 function ptOnCircle(cx: number, cy: number, r: number, degFromTop: number) {
   const a = ((degFromTop - 90) * Math.PI) / 180;
   return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
 }
 
-export default function RouletteWidget({
-  prizes,
-  isLoggedIn,
-}: {
-  prizes: RoulettePrize[];
-  isLoggedIn: boolean;
-}) {
+export default function RouletteWidget({ prizes, isLoggedIn }: { prizes: RoulettePrize[]; isLoggedIn: boolean }) {
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<"spin" | "result">("spin");
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<SpinResult | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [played, setPlayed] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn);
   const timer = useRef<any>(null);
+
+  const savePlay = (res: SpinResult, claimed: boolean) => {
+    try { localStorage.setItem(PLAY_KEY, JSON.stringify({ result: res, claimed })); } catch {}
+  };
 
   useEffect(() => {
     if (!prizes.length) return;
     try {
-      if (!localStorage.getItem(SEEN_KEY)) {
+      const raw = localStorage.getItem(PLAY_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.result) {
+          setResult(saved.result);
+          setPhase("result");
+          setPlayed(true);
+          setRevealed(!!saved.claimed || saved.result.type === "none");
+        }
+      } else if (!localStorage.getItem(SEEN_KEY)) {
         const t = setTimeout(() => setOpen(true), 1200);
         return () => clearTimeout(t);
       }
@@ -50,16 +59,15 @@ export default function RouletteWidget({
     try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
   };
 
-  const reset = () => {
-    setPhase("spin");
-    setResult(null);
-    setRevealed(false);
+  const markClaimed = () => {
+    setRevealed(true);
+    setLoggedIn(true);
+    if (result) savePlay(result, true);
   };
 
   const onSpin = async () => {
-    if (spinning) return;
+    if (spinning || played) return;
     setSpinning(true);
-    setResult(null);
     const res = await spin();
     if (!res.ok) {
       setSpinning(false);
@@ -67,6 +75,8 @@ export default function RouletteWidget({
       setPhase("result");
       return;
     }
+    setPlayed(true);
+    savePlay(res, false);
     const idx = Math.max(0, prizes.findIndex((p) => p.id === res.prizeId));
     const targetCenter = idx * seg + seg / 2;
     const base = rotation - (rotation % 360);
@@ -81,13 +91,13 @@ export default function RouletteWidget({
       if (loggedIn && res.type !== "none") {
         await claimCurrentWin(res.winId);
         setRevealed(true);
+        savePlay(res, true);
       }
     }, 4700);
   };
 
   return (
     <>
-      {/* bouton flottant */}
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-semibold text-white shadow-pop transition hover:bg-ink-80"
@@ -96,7 +106,7 @@ export default function RouletteWidget({
         <motion.span animate={{ rotate: [0, -12, 12, 0] }} transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.2 }}>
           <Gift className="h-5 w-5" />
         </motion.span>
-        <span className="hidden sm:inline">Tentez votre chance</span>
+        <span className="hidden sm:inline">{played ? "Mon lot" : "Tentez votre chance"}</span>
       </button>
 
       <AnimatePresence>
@@ -115,10 +125,10 @@ export default function RouletteWidget({
 
               <div className="text-center">
                 <span className="eyebrow">Roue de la chance</span>
-                <h2 className="mt-2 text-2xl font-semibold text-ink">Tournez & gagnez 🎉</h2>
+                <h2 className="mt-2 text-2xl font-semibold text-ink">{played ? "Votre lot" : "Tournez & gagnez 🎉"}</h2>
+                {!played && <p className="mt-1 text-xs text-muted">Un seul tour par personne.</p>}
               </div>
 
-              {/* roue */}
               <div className="relative mx-auto mt-6 h-64 w-64">
                 <div className="absolute left-1/2 top-[-6px] z-10 -translate-x-1/2">
                   <div className="h-0 w-0 border-l-[10px] border-r-[10px] border-t-[16px] border-l-transparent border-r-transparent border-t-ink" />
@@ -136,16 +146,7 @@ export default function RouletteWidget({
                       return (
                         <g key={p.id}>
                           <path d={`M100,100 L${x1},${y1} A100,100 0 ${large} 1 ${x2},${y2} Z`} fill={p.color} stroke="#fff" strokeWidth="1" />
-                          <text
-                            x={lx}
-                            y={ly}
-                            fill="#fff"
-                            fontSize="9"
-                            fontWeight="700"
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            transform={`rotate(${i * seg + seg / 2} ${lx} ${ly})`}
-                          >
+                          <text x={lx} y={ly} fill="#fff" fontSize="9" fontWeight="700" textAnchor="middle" dominantBaseline="middle" transform={`rotate(${i * seg + seg / 2} ${lx} ${ly})`}>
                             {p.label.slice(0, 16)}
                           </text>
                         </g>
@@ -158,14 +159,14 @@ export default function RouletteWidget({
                 </div>
               </div>
 
-              {phase === "spin" && (
+              {phase === "spin" && !played && (
                 <button onClick={onSpin} disabled={spinning} className="btn-primary mt-6 w-full">
                   {spinning ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tourner la roue"}
                 </button>
               )}
 
               {phase === "result" && result && (
-                <Result result={result} revealed={revealed} onReveal={() => setRevealed(true)} onReplay={reset} onLoggedIn={() => setLoggedIn(true)} />
+                <Result result={result} revealed={revealed} onClaimed={markClaimed} />
               )}
             </motion.div>
           </>
@@ -175,33 +176,15 @@ export default function RouletteWidget({
   );
 }
 
-function Result({
-  result,
-  revealed,
-  onReveal,
-  onReplay,
-  onLoggedIn,
-}: {
-  result: SpinResult;
-  revealed: boolean;
-  onReveal: () => void;
-  onReplay: () => void;
-  onLoggedIn: () => void;
-}) {
+function Result({ result, revealed, onClaimed }: { result: SpinResult; revealed: boolean; onClaimed: () => void }) {
   if (!result.ok) {
-    return (
-      <div className="mt-6 text-center">
-        <p className="text-sm text-red-600">{result.error}</p>
-        <button onClick={onReplay} className="btn-outline mt-4">Réessayer</button>
-      </div>
-    );
+    return <p className="mt-6 text-center text-sm text-red-600">{result.error}</p>;
   }
   if (result.type === "none") {
     return (
       <div className="mt-6 text-center">
         <p className="text-lg font-semibold text-ink">Pas de chance cette fois 😅</p>
-        <p className="mt-1 text-sm text-muted">Retentez votre chance !</p>
-        <button onClick={onReplay} className="btn-primary mt-4 w-full">Rejouer</button>
+        <p className="mt-1 text-sm text-muted">Merci d'avoir tenté votre chance !</p>
       </div>
     );
   }
@@ -209,27 +192,24 @@ function Result({
     <div className="mt-6 text-center">
       <p className="text-lg font-semibold text-ink">🎉 Vous avez gagné : {result.label}</p>
       {revealed ? (
-        <RevealedPrize result={result} onReplay={onReplay} />
+        <RevealedPrize result={result} />
       ) : (
         <>
-          <p className="mt-1 text-sm text-muted">
-            Créez votre compte (ou connectez-vous) pour récupérer votre lot.
-          </p>
-          <AccountForm winId={result.winId} onSuccess={() => { onReveal(); onLoggedIn(); }} />
+          <p className="mt-1 text-sm text-muted">Créez votre compte (ou connectez-vous) pour récupérer votre lot.</p>
+          <AccountForm winId={result.winId} onSuccess={onClaimed} />
         </>
       )}
     </div>
   );
 }
 
-function RevealedPrize({ result, onReplay }: { result: SpinResult & { ok: true }; onReplay: () => void }) {
+function RevealedPrize({ result }: { result: SpinResult & { ok: true } }) {
   const [copied, setCopied] = useState(false);
   if (result.type === "product") {
     return (
       <div className="mt-3">
         <p className="text-sm text-ink">{result.productName ?? "Cadeau"} 🎁</p>
         <p className="mt-1 text-sm text-muted">Notre équipe vous contactera pour vous le remettre.</p>
-        <button onClick={onReplay} className="btn-outline mt-4 w-full">Rejouer</button>
       </div>
     );
   }
@@ -244,7 +224,6 @@ function RevealedPrize({ result, onReplay }: { result: SpinResult & { ok: true }
         {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-4 w-4 text-muted" />}
       </button>
       <p className="mt-2 text-xs text-muted">À utiliser au moment de la commande.</p>
-      <button onClick={onReplay} className="btn-outline mt-4 w-full">Rejouer</button>
     </div>
   );
 }
@@ -261,9 +240,7 @@ function AccountForm({ winId, onSuccess }: { winId: string; onSuccess: () => voi
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const res = mode === "signup"
-      ? await signup({ name, phone, password, winId })
-      : await login({ phone, password, winId });
+    const res = mode === "signup" ? await signup({ name, phone, password, winId }) : await login({ phone, password, winId });
     setLoading(false);
     if (res.ok) onSuccess();
     else setError(res.error);
@@ -271,9 +248,7 @@ function AccountForm({ winId, onSuccess }: { winId: string; onSuccess: () => voi
 
   return (
     <form onSubmit={submit} className="mt-4 space-y-3 text-left">
-      {mode === "signup" && (
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Votre nom" className="input" required />
-      )}
+      {mode === "signup" && <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Votre nom" className="input" required />}
       <input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="Téléphone" className="input" required />
       <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Mot de passe" className="input" required />
       {error && <p className="text-xs text-red-600">{error}</p>}
