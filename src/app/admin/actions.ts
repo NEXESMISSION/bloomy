@@ -13,6 +13,12 @@ import { updateSettings } from "@/lib/data/settings";
 import { setReviewStatus, deleteReview } from "@/lib/data/reviews";
 import { upsertPrize, deletePrize, type PrizeInput } from "@/lib/data/roulette";
 import { upsertBanner, deleteBanner, type BannerInput } from "@/lib/data/banners";
+import {
+  createGoldenBatch,
+  setGoldenBatchActive,
+  deleteGoldenBatch,
+  processGoldenExpiries,
+} from "@/lib/data/golden";
 import type { OrderStatus, ReviewStatus, ShopSettings } from "@/lib/types";
 
 export async function login(
@@ -186,4 +192,38 @@ export async function removeBanner(id: string) {
   await deleteBanner(id);
   revalidatePath("/admin/bannieres");
   revalidatePath("/");
+}
+
+/* ─────────────── Golden Tickets ─────────────── */
+
+export async function createGoldenBatchAction(input: {
+  name: string;
+  prize_label: string;
+  ticket_count: number;
+  winner_count: number;
+  claim_days: number;
+}) {
+  await requireAdmin();
+  const batch = await createGoldenBatch(input);
+  revalidatePath("/admin/golden");
+  return batch;
+}
+
+export async function toggleGoldenBatchAction(id: string, active: boolean) {
+  await requireAdmin();
+  await setGoldenBatchActive(id, active);
+  revalidatePath("/admin/golden");
+}
+
+export async function removeGoldenBatchAction(id: string) {
+  await requireAdmin();
+  await deleteGoldenBatch(id);
+  revalidatePath("/admin/golden");
+}
+
+export async function processGoldenExpiriesAction(id: string) {
+  await requireAdmin();
+  const n = await processGoldenExpiries(id);
+  revalidatePath("/admin/golden");
+  return n;
 }

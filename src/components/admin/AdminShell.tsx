@@ -11,6 +11,7 @@ import {
   Tag,
   Star,
   Gift,
+  Ticket,
   Images,
   Settings,
   ExternalLink,
@@ -28,6 +29,7 @@ const NAV = [
   { label: "Produits", href: "/admin/produits", icon: Package },
   { label: "Codes promo", href: "/admin/codes", icon: Tag },
   { label: "Roulette", href: "/admin/roulette", icon: Gift },
+  { label: "Golden Ticket", href: "/admin/golden", icon: Ticket },
   { label: "Avis", href: "/admin/avis", icon: Star },
   { label: "Paramètres", href: "/admin/parametres", icon: Settings },
 ];

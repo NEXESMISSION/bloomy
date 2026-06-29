@@ -142,6 +142,50 @@ export type Banner = {
   active: boolean;
 };
 
+export type GoldenBatch = {
+  id: string;
+  created_at?: string;
+  name: string;
+  prize_label: string;
+  ticket_count: number;
+  winner_count: number;
+  claim_days: number;
+  active: boolean;
+};
+
+export type GoldenBatchStats = GoldenBatch & {
+  scanned: number;
+  claimed: number;
+  active_wins: number;
+  expired: number;
+};
+
+export type GoldenTicket = {
+  id: string;
+  created_at?: string;
+  batch_id: string;
+  token: string;
+  is_winner: boolean;
+  revealed: boolean;
+  scanned_at: string | null;
+  won_at: string | null;
+  claim_deadline: string | null;
+  claimed: boolean;
+  claimed_at: string | null;
+  claimer_name: string | null;
+  claimer_phone: string | null;
+  expired: boolean;
+};
+
+/** État public d'un ticket (jamais `is_winner` avant la révélation). */
+export type GoldenPublicState =
+  | { status: "invalid" }
+  | { status: "ended" }
+  | { status: "unrevealed"; prizeLabel: string }
+  | { status: "loser" }
+  | { status: "winner"; prizeLabel: string; deadline: string | null; claimed: boolean }
+  | { status: "expired" };
+
 export type ReviewStatus = "pending" | "approved" | "rejected";
 
 export type Review = {

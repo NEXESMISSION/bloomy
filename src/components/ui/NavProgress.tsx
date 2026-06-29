@@ -69,15 +69,17 @@ export default function NavProgress() {
             exit={{ width: "100%", opacity: 0, transition: { duration: 0.25 } }}
           />
           <motion.div
-            key="ring"
-            initial={{ opacity: 0, scale: 0.8 }}
+            key="spinner"
+            initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-            className="fixed right-4 top-4 z-[100] grid h-9 w-9 place-items-center rounded-full border border-line bg-paper/90 shadow-card backdrop-blur"
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="pointer-events-none fixed inset-0 z-[100] grid place-items-center"
             aria-hidden
           >
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-ink" />
+            <div className="grid h-[68px] w-[68px] place-items-center rounded-2xl bg-paper/95 shadow-pop backdrop-blur">
+              <span className="block h-8 w-8 animate-spin rounded-full border-[3px] border-line border-t-accent" />
+            </div>
           </motion.div>
         </>
       )}

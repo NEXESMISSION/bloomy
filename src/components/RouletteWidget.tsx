@@ -6,6 +6,7 @@ import { Gift, X, Loader2, Check, Copy } from "lucide-react";
 import type { RoulettePrize } from "@/lib/types";
 import { spin, signup, login, claimCurrentWin, type SpinResult } from "@/app/account-actions";
 import { cn } from "@/lib/utils";
+import { celebrate } from "@/lib/confetti";
 
 const SEEN_KEY = "bloomy_roulette_seen";
 const PLAY_KEY = "bloomy_roulette_play"; // {result, claimed} — 1 seul tour autorisé
@@ -74,6 +75,7 @@ export default function RouletteWidget({ prizes, isLoggedIn }: { prizes: Roulett
     setRevealed(true);
     setLoggedIn(true);
     if (result) savePlay(result, true);
+    if (result?.ok && result.type !== "none") celebrate();
   };
 
   const onSpin = async () => {
@@ -103,6 +105,7 @@ export default function RouletteWidget({ prizes, isLoggedIn }: { prizes: Roulett
         await claimCurrentWin(res.winId);
         setRevealed(true);
         savePlay(res, true);
+        celebrate();
       }
     }, 4900);
   };
