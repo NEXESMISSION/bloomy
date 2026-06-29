@@ -103,7 +103,10 @@ export default function Hero({ banners }: { banners: Banner[] }) {
   const [[index, dir], setState] = useState<[number, number]>([0, 0]);
   const paused = useRef(false);
 
-  const go = (target: number, d: number) => setState([(target + slides.length) % slides.length, d]);
+  // Mises à jour fonctionnelles → jamais de valeur d'index « périmée » (closure).
+  const step = (delta: number) =>
+    setState(([i]) => [(i + delta + slides.length) % slides.length, delta < 0 ? -1 : 1]);
+  const goTo = (i: number) => setState(([cur]) => [i, i >= cur ? 1 : -1]);
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -112,6 +115,22 @@ export default function Hero({ banners }: { banners: Banner[] }) {
     }, 5000);
     return () => clearInterval(id);
   }, [slides.length]);
+
+  // Détection du swipe par pointeur (découplée de l'animation des slides pour
+  // éviter qu'une slide reste « coincée » dans une position intermédiaire).
+  const swipeStart = useRef<number | null>(null);
+  const onSwipeStart = (e: React.PointerEvent) => {
+    swipeStart.current = e.clientX;
+    paused.current = true;
+  };
+  const onSwipeEnd = (e: React.PointerEvent) => {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    paused.current = false;
+    if (start == null || slides.length <= 1) return;
+    const dx = e.clientX - start;
+    if (Math.abs(dx) > 45) step(dx < 0 ? 1 : -1);
+  };
 
   const slide = slides[Math.min(index, slides.length - 1)];
 
@@ -125,7 +144,16 @@ export default function Hero({ banners }: { banners: Banner[] }) {
         onMouseLeave={() => (paused.current = false)}
         className="relative overflow-hidden rounded-3xl bg-surface"
       >
-        <div className="relative aspect-[4/5] w-full sm:aspect-[16/7]">
+        <div
+          className="relative aspect-[4/5] w-full touch-pan-y select-none sm:aspect-[16/7]"
+          onPointerDown={onSwipeStart}
+          onPointerUp={onSwipeEnd}
+          onPointerCancel={() => {
+            swipeStart.current = null;
+            paused.current = false;
+          }}
+          onDragStart={(e) => e.preventDefault()}
+        >
           <AnimatePresence initial={false} custom={dir}>
             <motion.div
               key={slide.id}
@@ -134,19 +162,8 @@ export default function Hero({ banners }: { banners: Banner[] }) {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.6, ease }}
-              drag={slides.length > 1 ? "x" : false}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.16}
-              onDragStart={() => (paused.current = true)}
-              onDragEnd={(_, info) => {
-                const swipe = info.offset.x;
-                const power = info.velocity.x;
-                if (swipe < -60 || power < -500) go(index + 1, 1);
-                else if (swipe > 60 || power > 500) go(index - 1, -1);
-                paused.current = false;
-              }}
-              className="absolute inset-0 cursor-grab touch-pan-y active:cursor-grabbing"
+              transition={{ duration: 0.5, ease }}
+              className="absolute inset-0"
             >
               <Slide slide={slide} priority={index === 0} />
             </motion.div>
@@ -155,14 +172,14 @@ export default function Hero({ banners }: { banners: Banner[] }) {
           {slides.length > 1 && (
             <>
               <button
-                onClick={() => go(index - 1, -1)}
+                onClick={() => step(-1)}
                 aria-label="Précédent"
                 className="absolute left-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/40 bg-ink/30 text-white backdrop-blur transition hover:bg-ink/50 sm:grid"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
-                onClick={() => go(index + 1, 1)}
+                onClick={() => step(1)}
                 aria-label="Suivant"
                 className="absolute right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/40 bg-ink/30 text-white backdrop-blur transition hover:bg-ink/50 sm:grid"
               >
@@ -178,7 +195,7 @@ export default function Hero({ banners }: { banners: Banner[] }) {
           {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => go(i, i > index ? 1 : -1)}
+              onClick={() => goTo(i)}
               aria-label={`Bannière ${i + 1}`}
               className={cn(
                 "h-2 rounded-full transition-all duration-300",
