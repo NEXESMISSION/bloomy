@@ -1,23 +1,36 @@
 import Link from "next/link";
-import { ShoppingCart, Sparkles, Truck, Wallet, ArrowRight, Database, Radar } from "lucide-react";
+import { ShoppingCart, Sparkles, Truck, Wallet, ArrowRight, Database, Radar, Receipt, HandCoins, PackageX } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { listOrders, getStats, getSourceBreakdown } from "@/lib/data/orders";
+import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
+import { listOrders, getStats, getSourceBreakdown, getAnalytics } from "@/lib/data/orders";
+import { getProducts } from "@/lib/data/products";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { formatTND, formatDateFR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+const LOW_STOCK = 5;
+
 export default async function AdminDashboard() {
-  const [stats, orders, sources] = await Promise.all([getStats(), listOrders(), getSourceBreakdown()]);
+  const [stats, orders, sources, analytics, products] = await Promise.all([
+    getStats(),
+    listOrders(),
+    getSourceBreakdown(),
+    getAnalytics(14),
+    getProducts(),
+  ]);
   const recent = orders.slice(0, 6);
   const maxSourceOrders = Math.max(1, ...sources.map((s) => s.orders));
+  const lowStock = products.filter((p) => p.stock <= LOW_STOCK).sort((a, b) => a.stock - b.stock);
 
   const cards = [
     { label: "Commandes", value: stats.total, icon: ShoppingCart },
     { label: "Nouvelles", value: stats.nouvelles, icon: Sparkles },
     { label: "Livrées", value: stats.livrees, icon: Truck },
     { label: "Chiffre d'affaires", value: formatTND(stats.revenue), icon: Wallet },
+    { label: "Panier moyen", value: formatTND(analytics.avgOrder), icon: Receipt },
+    { label: "À encaisser", value: formatTND(analytics.toCollect), icon: HandCoins },
   ];
 
   return (
@@ -37,7 +50,7 @@ export default async function AdminDashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <div key={c.label} className="rounded-2xl border border-line bg-white p-5">
             <c.icon className="h-5 w-5 text-muted" strokeWidth={1.6} />
@@ -46,6 +59,30 @@ export default async function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      <DashboardAnalytics analytics={analytics} />
+
+      {lowStock.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/60">
+          <div className="flex items-center gap-2 border-b border-amber-200 px-5 py-4">
+            <PackageX className="h-5 w-5 text-amber-600" strokeWidth={1.6} />
+            <h2 className="font-semibold text-ink">Stock faible</h2>
+          </div>
+          <div className="divide-y divide-amber-200/70">
+            {lowStock.map((p) => (
+              <div key={p.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                <span className="truncate text-ink">{p.name}</span>
+                <span className={p.stock === 0 ? "font-semibold text-red-600" : "font-semibold text-amber-700"}>
+                  {p.stock === 0 ? "Rupture" : `${p.stock} restant(s)`}
+                </span>
+              </div>
+            ))}
+          </div>
+          <Link href="/admin/produits" className="flex items-center gap-1 px-5 py-3 text-sm text-muted hover:text-ink">
+            Gérer les stocks <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
 
       <div className="mt-6 rounded-2xl border border-line bg-white">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">

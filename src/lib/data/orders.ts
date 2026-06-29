@@ -199,6 +199,75 @@ export async function getStats(): Promise<AdminStats> {
   };
 }
 
+export type DayPoint = { date: string; label: string; orders: number; revenue: number };
+export type TopProduct = { name: string; quantity: number; revenue: number };
+export type Analytics = {
+  daily: DayPoint[];
+  byStatus: Record<OrderStatus, number>;
+  topProducts: TopProduct[];
+  avgOrder: number;
+  toCollect: number; // CA des commandes non livrées et non annulées (à encaisser)
+};
+
+/** Statistiques détaillées pour le tableau de bord. */
+export async function getAnalytics(days = 14): Promise<Analytics> {
+  const orders = await listOrders();
+
+  // Série journalière (N derniers jours, jours vides inclus).
+  const daily: DayPoint[] = [];
+  const buckets = new Map<string, { orders: number; revenue: number }>();
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    buckets.set(key, { orders: 0, revenue: 0 });
+    daily.push({ date: key, label: `${d.getDate()}/${d.getMonth() + 1}`, orders: 0, revenue: 0 });
+  }
+  for (const o of orders) {
+    if (o.status === "annulee") continue;
+    const key = String(o.created_at).slice(0, 10);
+    const b = buckets.get(key);
+    if (b) {
+      b.orders += 1;
+      b.revenue += Number(o.total);
+    }
+  }
+  for (const point of daily) {
+    const b = buckets.get(point.date)!;
+    point.orders = b.orders;
+    point.revenue = b.revenue;
+  }
+
+  const byStatus = { nouvelle: 0, confirmee: 0, expediee: 0, livree: 0, annulee: 0 } as Record<OrderStatus, number>;
+  for (const o of orders) byStatus[o.status] = (byStatus[o.status] ?? 0) + 1;
+
+  // Top produits (quantité vendue), hors commandes annulées.
+  const prodMap = new Map<string, { quantity: number; revenue: number }>();
+  for (const o of orders) {
+    if (o.status === "annulee") continue;
+    for (const it of o.items) {
+      const cur = prodMap.get(it.name) ?? { quantity: 0, revenue: 0 };
+      cur.quantity += Number(it.quantity);
+      cur.revenue += Number(it.unit_price) * Number(it.quantity);
+      prodMap.set(it.name, cur);
+    }
+  }
+  const topProducts = Array.from(prodMap.entries())
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 5);
+
+  const valid = orders.filter((o) => o.status !== "annulee");
+  const revenue = valid.reduce((s, o) => s + Number(o.total), 0);
+  const avgOrder = valid.length ? revenue / valid.length : 0;
+  const toCollect = orders
+    .filter((o) => o.status === "nouvelle" || o.status === "confirmee" || o.status === "expediee")
+    .reduce((s, o) => s + Number(o.total), 0);
+
+  return { daily, byStatus, topProducts, avgOrder, toCollect };
+}
+
 /** Agrégation par source / code (suivi des leads). */
 export type SourceStat = { key: string; orders: number; revenue: number; codes: Set<string> };
 

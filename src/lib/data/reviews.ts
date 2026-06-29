@@ -57,6 +57,24 @@ export async function getApprovedReviews(slug: string): Promise<Review[]> {
   return (data ?? []).map(mapReview);
 }
 
+/** Avis approuvés tous produits confondus (pour la page d'accueil). */
+export async function getApprovedReviewsAll(limit = 12): Promise<Review[]> {
+  const db = supabaseAdmin();
+  if (!db) {
+    return (await localGetReviews())
+      .filter((r) => r.status === "approved")
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .slice(0, limit);
+  }
+  const { data } = await db
+    .from("reviews")
+    .select("*")
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data ?? []).map(mapReview);
+}
+
 export async function getReviewStats(slug: string): Promise<{ count: number; avg: number }> {
   const reviews = await getApprovedReviews(slug);
   if (!reviews.length) return { count: 0, avg: 0 };
