@@ -1,0 +1,15 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  eslint: { ignoreDuringBuilds: true },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**.supabase.co" },
+    ],
+  },
+  experimental: {
+    serverActions: { bodySizeLimit: "12mb" },
+  },
+};
+
+export default nextConfig;

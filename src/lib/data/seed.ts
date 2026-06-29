@@ -1,0 +1,104 @@
+import type { Product } from "@/lib/types";
+
+/**
+ * Catalogue Bloomy — 4 parfums (eau de toilette 50ml), inspirés de grands classiques.
+ * Données de démonstration (fallback) ET seed de la base (voir supabase/schema.sql).
+ */
+export const SEED_PRODUCTS: Product[] = [
+  {
+    id: "a1111111-1111-1111-1111-111111111111",
+    slug: "most-wanted",
+    name: "The Most Wanted",
+    tagline: "L'élixir de la séduction. — Inspiré d'Azzaro The Most Wanted.",
+    description:
+      "Un sillage chaud et addictif, pensé pour les soirées qui marquent. The Most Wanted s'ouvre sur une cardamome et un gingembre vibrants, dévoile un cœur de liqueur de toffee et de cuir, puis s'installe sur un fond de bois ambré et de vétiver. Magnétique, audacieux, irrésistible.",
+    price: 39.9,
+    compare_at_price: 59.9,
+    size_ml: 50,
+    accent: "#E7B567",
+    family: "Ambré Épicé",
+    notes_top: ["Cardamome", "Gingembre"],
+    notes_heart: ["Liqueur de toffee", "Cuir"],
+    notes_base: ["Bois ambré", "Vétiver"],
+    moods: ["Séduction", "Soir", "Audacieux"],
+    image: "/products/most-wanted.png",
+    is_featured: true,
+    is_best_seller: true,
+    is_active: true,
+    stock: 50,
+    sort_order: 1,
+  },
+  {
+    id: "a2222222-2222-2222-2222-222222222222",
+    slug: "imagination",
+    name: "Imagination",
+    tagline: "Un voyage olfactif lumineux. — Inspiré de LV Imagination.",
+    description:
+      "La fraîcheur raffinée d'un grand voyage. Imagination pétille de bergamote et de thé noir, se réchauffe d'un gingembre et d'une cardamome délicats, puis repose sur un ambre, un bois de santal et un musc enveloppants. Élégant, lumineux, intemporel.",
+    price: 36.9,
+    compare_at_price: null,
+    size_ml: 50,
+    accent: "#21C7D0",
+    family: "Boisé Aromatique",
+    notes_top: ["Bergamote", "Thé noir"],
+    notes_heart: ["Gingembre", "Cardamome"],
+    notes_base: ["Ambre", "Bois de santal", "Musc"],
+    moods: ["Frais", "Élégant", "Jour"],
+    image: "/products/imagination.png",
+    is_featured: true,
+    is_best_seller: false,
+    is_active: true,
+    stock: 45,
+    sort_order: 2,
+  },
+  {
+    id: "a3333333-3333-3333-3333-333333333333",
+    slug: "sauvage",
+    name: "Sauvage",
+    tagline: "La fraîcheur brute et magnétique. — Inspiré de Dior Sauvage.",
+    description:
+      "Le sillage signature par excellence. Sauvage s'élance sur une bergamote et un poivre de Sichuan mordants, dévoile une lavande aromatique, puis s'ancre dans un ambroxan et un cèdre puissants. Frais, brut, impossible à ignorer.",
+    price: 38.9,
+    compare_at_price: 54.9,
+    size_ml: 50,
+    accent: "#1E5BFF",
+    family: "Aromatique Fougère",
+    notes_top: ["Bergamote", "Poivre de Sichuan"],
+    notes_heart: ["Lavande", "Géranium"],
+    notes_base: ["Ambroxan", "Cèdre"],
+    moods: ["Signature", "Frais", "Quotidien"],
+    image: "/products/sauvage.png",
+    is_featured: false,
+    is_best_seller: true,
+    is_active: true,
+    stock: 48,
+    sort_order: 3,
+  },
+  {
+    id: "a4444444-4444-4444-4444-444444444444",
+    slug: "bleu-de-chanel",
+    name: "Bleu de Chanel",
+    tagline: "L'élégance intemporelle. — Inspiré de Chanel Bleu.",
+    description:
+      "Le raffinement à l'état pur. Bleu de Chanel ouvre sur des agrumes et une menthe vives, révèle un cœur de gingembre et de pamplemousse, puis se pose sur un encens, un cèdre et un santal nobles. Sophistiqué, polyvalent, irréprochable.",
+    price: 37.9,
+    compare_at_price: null,
+    size_ml: 50,
+    accent: "#3B82F6",
+    family: "Boisé Aromatique",
+    notes_top: ["Agrumes", "Menthe"],
+    notes_heart: ["Gingembre", "Pamplemousse"],
+    notes_base: ["Encens", "Cèdre", "Santal"],
+    moods: ["Élégant", "Affaires", "Soir"],
+    image: "/products/bleu-de-chanel.png",
+    is_featured: true,
+    is_best_seller: false,
+    is_active: true,
+    stock: 42,
+    sort_order: 4,
+  },
+];
+
+export function findSeedBySlug(slug: string): Product | undefined {
+  return SEED_PRODUCTS.find((p) => p.slug === slug);
+}

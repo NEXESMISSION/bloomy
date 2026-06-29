@@ -1,0 +1,50 @@
+import { supabaseAdmin } from "@/lib/supabase";
+import { localGetSettings, localSaveSettings } from "@/lib/data/localStore";
+import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from "@/lib/types";
+import type { ShopSettings } from "@/lib/types";
+
+const DEFAULTS: ShopSettings = {
+  delivery_fee: DELIVERY_FEE,
+  free_delivery_threshold: FREE_DELIVERY_THRESHOLD,
+  shop_phone: process.env.NEXT_PUBLIC_SHOP_PHONE || "21600000000",
+  announcement: "🚚 Livraison partout en Tunisie · Paiement à la livraison",
+  reviews_enabled: true,
+};
+
+function num(v: any, fallback: number) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function fromMap(map: Record<string, string>): ShopSettings {
+  return {
+    delivery_fee: num(map.delivery_fee, DEFAULTS.delivery_fee),
+    free_delivery_threshold: num(map.free_delivery_threshold, DEFAULTS.free_delivery_threshold),
+    shop_phone: map.shop_phone || DEFAULTS.shop_phone,
+    announcement: map.announcement ?? DEFAULTS.announcement,
+    reviews_enabled: map.reviews_enabled !== "false",
+  };
+}
+
+export async function getSettings(): Promise<ShopSettings> {
+  const db = supabaseAdmin();
+  if (!db) return fromMap(await localGetSettings());
+  const { data, error } = await db.from("settings").select("*");
+  if (error || !data) return DEFAULTS;
+  const map = Object.fromEntries(data.map((r: any) => [r.key, r.value]));
+  return fromMap(map);
+}
+
+export async function updateSettings(patch: Partial<ShopSettings>): Promise<void> {
+  const entries = Object.entries(patch).filter(([, v]) => v !== undefined);
+  const db = supabaseAdmin();
+  if (!db) {
+    const map = await localGetSettings();
+    for (const [k, v] of entries) map[k] = String(v);
+    await localSaveSettings(map);
+    return;
+  }
+  const rows = entries.map(([key, value]) => ({ key, value: String(value) }));
+  const { error } = await db.from("settings").upsert(rows);
+  if (error) throw new Error(error.message);
+}

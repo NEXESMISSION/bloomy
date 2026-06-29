@@ -1,0 +1,126 @@
+export type Product = {
+  id: string;
+  slug: string;
+  name: string;
+  tagline: string;
+  description: string;
+  price: number; // dinars
+  compare_at_price: number | null;
+  size_ml: number;
+  accent: string; // couleur d'accent (hex) pour les effets de carte
+  family: string; // famille olfactive
+  notes_top: string[];
+  notes_heart: string[];
+  notes_base: string[];
+  moods: string[];
+  image: string;
+  gallery?: string[];
+  is_featured: boolean;
+  is_best_seller: boolean;
+  is_active: boolean;
+  stock: number;
+  sort_order: number;
+  created_at?: string;
+};
+
+export type OrderStatus =
+  | "nouvelle"
+  | "confirmee"
+  | "expediee"
+  | "livree"
+  | "annulee";
+
+export type OrderItem = {
+  product_id: string | null;
+  name: string;
+  unit_price: number;
+  quantity: number;
+};
+
+export type Order = {
+  id: string;
+  order_number: string;
+  created_at: string;
+  customer_name: string;
+  phone: string;
+  governorate: string;
+  city: string;
+  address: string;
+  notes: string | null;
+  status: OrderStatus;
+  subtotal: number;
+  discount_code: string | null;
+  discount_amount: number;
+  delivery_fee: number;
+  total: number;
+  source: string | null;
+  items: OrderItem[];
+};
+
+export type NewOrderInput = {
+  customer_name: string;
+  phone: string;
+  governorate: string;
+  city: string;
+  address: string;
+  notes?: string;
+  code?: string;
+  source?: string;
+  items: { product_id: string | null; name: string; unit_price: number; quantity: number }[];
+};
+
+export type DiscountType = "percent" | "fixed";
+
+export type DiscountCode = {
+  id: string;
+  created_at?: string;
+  code: string;
+  type: DiscountType;
+  value: number;
+  max_uses: number | null;
+  used_count: number;
+  min_subtotal: number;
+  source: string;
+  active: boolean;
+  expires_at: string | null;
+};
+
+export type ShopSettings = {
+  delivery_fee: number;
+  free_delivery_threshold: number;
+  shop_phone: string;
+  announcement: string;
+  reviews_enabled: boolean;
+};
+
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
+export type Review = {
+  id: string;
+  created_at: string;
+  product_id: string | null;
+  product_slug: string;
+  author_name: string;
+  rating: number;
+  comment: string;
+  status: ReviewStatus;
+};
+
+export type NewReviewInput = {
+  product_id: string | null;
+  product_slug: string;
+  author_name: string;
+  rating: number;
+  comment: string;
+};
+
+export const ORDER_STATUSES: { value: OrderStatus; label: string; color: string }[] = [
+  { value: "nouvelle", label: "Nouvelle", color: "#1E5BFF" },
+  { value: "confirmee", label: "Confirmée", color: "#9b87f5" },
+  { value: "expediee", label: "Expédiée", color: "#E7B567" },
+  { value: "livree", label: "Livrée", color: "#22c55e" },
+  { value: "annulee", label: "Annulée", color: "#ef4444" },
+];
+
+export const DELIVERY_FEE = 7; // dinars
+export const FREE_DELIVERY_THRESHOLD = 99; // livraison offerte au-dessus

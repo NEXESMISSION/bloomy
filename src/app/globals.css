@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 106.25%; /* ~17px : texte plus confortable sur grand écran */
+}
+
+body {
+  background: #ffffff;
+  color: #17171b;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #17171b;
+  color: #fff;
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-thumb { background: #d8d7d3; border-radius: 999px; border: 2px solid #fff; }
+::-webkit-scrollbar-thumb:hover { background: #bfbeba; }
+
+@layer base {
+  h1, h2, h3, h4 {
+    font-family: var(--font-display), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    color: #17171b;
+  }
+}
+
+@layer components {
+  .container-bloomy {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-6 lg:px-8;
+  }
+
+  /* Petit label en capitales */
+  .eyebrow {
+    @apply inline-block text-[11px] font-semibold uppercase tracking-[0.22em] text-muted;
+  }
+
+  /* Boutons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full text-[0.95rem] font-semibold
+           transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-ink px-6 py-3 text-white hover:bg-ink-80;
+  }
+  .btn-outline {
+    @apply btn border border-line bg-white px-6 py-3 text-ink hover:border-ink hover:bg-sand;
+  }
+  .btn-ghost {
+    @apply btn px-4 py-2 text-ink hover:bg-sand;
+  }
+
+  /* Champs */
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink
+           placeholder:text-muted/70 outline-none transition focus:border-ink/60 focus:ring-2 focus:ring-ink/10;
+  }
+
+  .surface {
+    @apply rounded-2xl bg-surface;
+  }
+
+  .hairline {
+    @apply h-px w-full bg-line;
+  }
+
+  /* Lien souligné fin */
+  .link-underline {
+    @apply relative text-ink after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0
+           after:bg-ink after:transition-all hover:after:w-full;
+  }
+}
+
+@layer utilities {
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
