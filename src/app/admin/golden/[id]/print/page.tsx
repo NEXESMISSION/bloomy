@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getGoldenBatch, getGoldenTickets } from "@/lib/data/golden";
 import { site } from "@/lib/site";
@@ -6,11 +7,30 @@ import PrintButton from "@/components/admin/PrintButton";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Base URL des QR codes. Priorité :
+ *  1. NEXT_PUBLIC_SITE_URL si défini et ≠ localhost  → domaine canonique (ex. https://bloomy.tn)
+ *  2. sinon le domaine RÉEL de la requête en cours    → jamais "localhost" en prod (ex. *.vercel.app)
+ * Ainsi, le jour du passage à bloomy.tn : on fixe NEXT_PUBLIC_SITE_URL et on réimprime.
+ */
+function resolveBaseUrl(): string {
+  const env = (process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
+  if (env && !env.includes("localhost")) return env;
+
+  const h = headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (host) {
+    const proto = h.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
+    return `${proto}://${host}`;
+  }
+  return env || site.url.replace(/\/$/, "");
+}
+
 export default async function GoldenPrintPage({ params }: { params: { id: string } }) {
   const batch = await getGoldenBatch(params.id);
   if (!batch) notFound();
   const tickets = await getGoldenTickets(params.id);
-  const base = site.url.replace(/\/$/, "");
+  const base = resolveBaseUrl();
 
   const qrs = await Promise.all(
     tickets.map(async (t, i) => ({
@@ -46,6 +66,10 @@ export default async function GoldenPrintPage({ params }: { params: { id: string
           <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{batch.name} — QR codes</h1>
           <p style={{ margin: "4px 0 0", color: "#76757b", fontSize: 14 }}>
             {tickets.length} tickets · lot : {batch.prize_label}. Imprimez, découpez et distribuez.
+          </p>
+          <p style={{ margin: "6px 0 0", fontSize: 13 }}>
+            <span style={{ color: "#76757b" }}>Les QR pointent vers : </span>
+            <span style={{ fontWeight: 600, color: "#17171b" }}>{base}/g/…</span>
           </p>
         </div>
         <PrintButton />
