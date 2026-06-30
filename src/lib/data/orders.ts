@@ -245,8 +245,11 @@ export async function getAnalytics(days = 14): Promise<Analytics> {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     const key = d.toISOString().slice(0, 10);
+    // Libellé dérivé de la MÊME clé UTC que le bucket (évite le décalage d'un jour
+    // entre l'axe en heure locale et les commandes regroupées en UTC).
+    const [, mm, dd] = key.split("-");
     buckets.set(key, { orders: 0, revenue: 0 });
-    daily.push({ date: key, label: `${d.getDate()}/${d.getMonth() + 1}`, orders: 0, revenue: 0 });
+    daily.push({ date: key, label: `${Number(dd)}/${Number(mm)}`, orders: 0, revenue: 0 });
   }
   for (const o of orders) {
     if (o.status === "annulee") continue;

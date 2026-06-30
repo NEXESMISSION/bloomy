@@ -165,8 +165,15 @@ export async function processGoldenExpiries(batchId: string): Promise<number> {
 
   const expired = expiredRows ?? [];
   for (const row of expired) {
-    // Marque le gain comme perdu.
-    await db.from("golden_tickets").update({ is_winner: false, expired: true }).eq("id", row.id);
+    // Marque le gain comme perdu — conditionnel `expired=false` pour qu'un scan
+    // concurrent ne traite pas deux fois la même expiration (anti double-réattribution).
+    const { data: flipped } = await db
+      .from("golden_tickets")
+      .update({ is_winner: false, expired: true })
+      .eq("id", row.id)
+      .eq("expired", false)
+      .select("id");
+    if (!flipped || flipped.length === 0) continue; // déjà traité par un autre appel
 
     // Réattribue à un ticket non utilisé, au hasard.
     const { data: pool } = await db

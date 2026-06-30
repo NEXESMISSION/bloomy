@@ -3,9 +3,11 @@
 import { createOrder } from "@/lib/data/orders";
 import { validateCode } from "@/lib/data/discounts";
 import { createReview } from "@/lib/data/reviews";
+import { createContactMessage } from "@/lib/data/contact";
 import { getProductBySlug } from "@/lib/data/products";
 import { getSettings } from "@/lib/data/settings";
 import { getCurrentCustomer } from "@/lib/customerSession";
+import { normalizePhone } from "@/lib/customerAuth";
 import { GOUVERNORATS } from "@/lib/tunisia";
 import { clientErrorMessage } from "@/lib/errors";
 import type { NewOrderInput, NewReviewInput } from "@/lib/types";
@@ -36,6 +38,26 @@ export async function submitReview(
       rating: input.rating,
       comment: input.comment,
     });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: clientErrorMessage(e) };
+  }
+}
+
+export async function submitContactMessage(input: {
+  name: string;
+  phone: string;
+  email?: string;
+  message: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const name = (input.name ?? "").trim();
+    if (name.length < 2) return { ok: false, error: "Veuillez indiquer votre nom." };
+    const phone = normalizePhone(input.phone ?? "");
+    if (!/^[0-9]{8}$/.test(phone)) return { ok: false, error: "Numéro de téléphone invalide (8 chiffres)." };
+    const message = (input.message ?? "").trim();
+    if (message.length < 5) return { ok: false, error: "Votre message est trop court." };
+    await createContactMessage({ name, phone, email: input.email, message });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: clientErrorMessage(e) };
@@ -73,8 +95,8 @@ export async function placeOrder(input: NewOrderInput): Promise<PlaceOrderResult
     const name = (input.customer_name ?? "").trim().slice(0, 80);
     if (name.length < 2) return { ok: false, error: "Veuillez saisir votre nom complet." };
 
-    const phone = (input.phone ?? "").replace(/[\s.-]/g, "");
-    if (!/^(\+?216)?[0-9]{8}$/.test(phone)) {
+    const phone = normalizePhone(input.phone ?? "");
+    if (!/^[0-9]{8}$/.test(phone)) {
       return { ok: false, error: "Numéro de téléphone invalide (8 chiffres)." };
     }
 

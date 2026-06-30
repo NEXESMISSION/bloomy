@@ -39,6 +39,14 @@ export function customerIdFromCookie(cookie: string | undefined): string | null 
   return id;
 }
 
+/**
+ * Canonicalise un numéro tunisien vers sa forme locale à 8 chiffres.
+ * « +216 58 415 520 », « 21658415520 » et « 58415520 » donnent tous « 58415520 »,
+ * pour que la mise en correspondance commande↔compte et l'unicité du téléphone
+ * (un seul compte par numéro) fonctionnent quel que soit le format saisi.
+ */
 export function normalizePhone(phone: string): string {
-  return phone.replace(/[\s.\-]/g, "");
+  let d = (phone || "").replace(/[\s.\-+]/g, "");
+  if (d.length === 11 && d.startsWith("216")) d = d.slice(3);
+  return d;
 }

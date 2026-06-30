@@ -21,6 +21,7 @@ import {
 } from "@/lib/data/golden";
 import { authenticateByPin, createStaff, updateStaff, deleteStaff, type StaffRole } from "@/lib/data/staff";
 import { logActivity } from "@/lib/data/activity";
+import { setContactHandled, deleteContactMessage } from "@/lib/data/contact";
 import { requireOwner, getCurrentStaff, type CurrentStaff } from "@/lib/staffSession";
 import type { OrderStatus, ReviewStatus, ShopSettings } from "@/lib/types";
 
@@ -219,7 +220,24 @@ export async function saveSettings(patch: Partial<ShopSettings>) {
   await updateSettings(patch);
   await audit(me, "Paramètres modifiés", "settings", null, Object.keys(patch).join(", "));
   revalidatePath("/admin/parametres");
+  revalidatePath("/admin/roulette"); // le toggle roulette_enabled vient d'ici aussi
   revalidatePath("/", "layout");
+}
+
+/* ─────────────── Messages de contact ─────────────── */
+
+export async function markMessageHandled(id: string, handled: boolean) {
+  const me = await adminActor();
+  await setContactHandled(id, handled);
+  await audit(me, handled ? "Message traité" : "Message rouvert", "contact_message", id);
+  revalidatePath("/admin/messages");
+}
+
+export async function removeMessage(id: string) {
+  const me = await adminActor();
+  await deleteContactMessage(id);
+  await audit(me, "Message supprimé", "contact_message", id);
+  revalidatePath("/admin/messages");
 }
 
 /* ─────────────── Avis clients ─────────────── */

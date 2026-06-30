@@ -26,6 +26,7 @@ import {
   Briefcase,
   Store,
   ShieldCheck,
+  Mail,
 } from "lucide-react";
 import { logout, whoami } from "@/app/admin/actions";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ const STORE_NAV = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
   { label: "Bannières", href: "/admin/bannieres", icon: Images },
   { label: "Commandes", href: "/admin/commandes", icon: ShoppingCart },
+  { label: "Messages", href: "/admin/messages", icon: Mail },
   { label: "Produits", href: "/admin/produits", icon: Package },
   { label: "Codes promo", href: "/admin/codes", icon: Tag },
   { label: "Roulette", href: "/admin/roulette", icon: Gift },

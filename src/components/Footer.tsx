@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Facebook, Lock } from "lucide-react";
-import { site } from "@/lib/site";
 import type { ShopSettings } from "@/lib/types";
 import { phoneDisplay, telHref } from "@/lib/phone";
 
@@ -15,21 +14,27 @@ export default function Footer({ settings }: { settings: ShopSettings }) {
             Parfums pour homme inspirés des grands classiques. Livraison partout en Tunisie,
             paiement à la livraison.
           </p>
-          <div className="mt-5 flex gap-3">
-            <a href={site.social.instagram} target="_blank" rel="noreferrer" className="grid h-9 w-9 place-items-center rounded-full border border-line text-ink transition hover:bg-white" aria-label="Instagram">
-              <Instagram className="h-[18px] w-[18px]" />
-            </a>
-            <a href={site.social.facebook} target="_blank" rel="noreferrer" className="grid h-9 w-9 place-items-center rounded-full border border-line text-ink transition hover:bg-white" aria-label="Facebook">
-              <Facebook className="h-[18px] w-[18px]" />
-            </a>
-          </div>
+          {(settings.shop_instagram || settings.shop_facebook) && (
+            <div className="mt-5 flex gap-3">
+              {settings.shop_instagram && (
+                <a href={settings.shop_instagram} target="_blank" rel="noreferrer" className="grid h-9 w-9 place-items-center rounded-full border border-line text-ink transition hover:bg-white" aria-label="Instagram">
+                  <Instagram className="h-[18px] w-[18px]" />
+                </a>
+              )}
+              {settings.shop_facebook && (
+                <a href={settings.shop_facebook} target="_blank" rel="noreferrer" className="grid h-9 w-9 place-items-center rounded-full border border-line text-ink transition hover:bg-white" aria-label="Facebook">
+                  <Facebook className="h-[18px] w-[18px]" />
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         <FooterCol
           title="Boutique"
           links={[
             { label: "Tous les parfums", href: "/boutique" },
-            { label: "Commander", href: "/boutique" },
+            { label: "Mon compte", href: "/compte" },
           ]}
         />
         <FooterCol

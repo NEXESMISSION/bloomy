@@ -72,8 +72,8 @@ export async function setRestockStatus(id: string, status: RestockStatus): Promi
     .update({ status, done_at: status === "fait" ? new Date().toISOString() : null })
     .eq("id", id);
   if (becomingDone && req.product_id && Number(req.quantity) > 0) {
-    const { data: p } = await db.from("products").select("stock").eq("id", req.product_id).maybeSingle();
-    if (p) await db.from("products").update({ stock: Number(p.stock) + Number(req.quantity) }).eq("id", req.product_id);
+    // Réapprovisionnement ATOMIQUE (évite la perte d'incrément concurrente).
+    await db.rpc("adjust_stock", { p_id: req.product_id, p_delta: Math.abs(Number(req.quantity)) });
   }
 }
 

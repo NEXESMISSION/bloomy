@@ -3,10 +3,20 @@
 -- ║  suivi des sources (leads), paramètres boutique.               ║
 -- ╚══════════════════════════════════════════════════════════════╝
 
--- 1) Remplacer le catalogue par les 4 parfums réels
-delete from order_items;
-delete from orders;
-delete from products;
+-- 1) Remplacer le catalogue de démonstration par les 4 parfums réels.
+-- NON DESTRUCTIF & idempotent : on supprime UNIQUEMENT les 5 produits
+-- placeholder de schema.sql, et seulement s'ils ne sont référencés par aucune
+-- commande. On ne touche JAMAIS aux commandes / order_items (re-exécuter cette
+-- migration ne doit jamais détruire de données client).
+delete from products p
+ where p.id in (
+   '11111111-1111-1111-1111-111111111111',
+   '22222222-2222-2222-2222-222222222222',
+   '33333333-3333-3333-3333-333333333333',
+   '44444444-4444-4444-4444-444444444444',
+   '55555555-5555-5555-5555-555555555555'
+ )
+ and not exists (select 1 from order_items oi where oi.product_id = p.id);
 
 insert into products
   (id, slug, name, tagline, description, price, compare_at_price, size_ml, accent, family,

@@ -93,6 +93,8 @@ export type ShopSettings = {
   shop_phone: string; // numéro principal (= WhatsApp)
   shop_phone_2: string; // numéro secondaire
   shop_email: string; // email de contact
+  shop_instagram: string; // URL Instagram (vide = masqué)
+  shop_facebook: string; // URL Facebook (vide = masqué)
   announcement: string;
   reviews_enabled: boolean;
   roulette_enabled: boolean;

@@ -120,11 +120,10 @@ export async function createSale(input: {
     items.map((i) => ({ sale_id: saleRow.id, product_id: i.product_id, name: i.name.trim(), unit_price: i.unit_price, quantity: i.quantity })),
   );
 
-  // Décrémente le stock des produits du catalogue.
+  // Décrémente le stock des produits du catalogue — ATOMIQUE (anti-survente / lost-update).
   for (const i of items) {
     if (!i.product_id) continue;
-    const { data: p } = await db.from("products").select("stock").eq("id", i.product_id).maybeSingle();
-    if (p) await db.from("products").update({ stock: Math.max(0, Number(p.stock) - Number(i.quantity)) }).eq("id", i.product_id);
+    await db.rpc("adjust_stock", { p_id: i.product_id, p_delta: -Math.abs(Number(i.quantity)) });
   }
 
   if (paid > 0) {
@@ -139,12 +138,11 @@ export async function cancelSale(id: string): Promise<void> {
   if (!db) return;
   const { data: sale } = await db.from("sales").select("status").eq("id", id).maybeSingle();
   if (!sale || sale.status === "annulee") return;
-  // Restaure le stock.
+  // Restaure le stock — ATOMIQUE.
   const { data: items } = await db.from("sale_items").select("product_id,quantity").eq("sale_id", id);
   for (const i of items ?? []) {
     if (!i.product_id) continue;
-    const { data: p } = await db.from("products").select("stock").eq("id", i.product_id).maybeSingle();
-    if (p) await db.from("products").update({ stock: Number(p.stock) + Number(i.quantity) }).eq("id", i.product_id);
+    await db.rpc("adjust_stock", { p_id: i.product_id, p_delta: Math.abs(Number(i.quantity)) });
   }
   await db.from("sales").update({ status: "annulee" }).eq("id", id);
 }
@@ -174,7 +172,11 @@ export async function recordPayment(input: {
     const { data: pays } = await db.from("payments").select("amount").eq("sale_id", input.sale_id);
     const paid = (pays ?? []).reduce((s: number, p: any) => s + Number(p.amount), 0);
     const { data: sale } = await db.from("sales").select("total").eq("id", input.sale_id).maybeSingle();
-    if (sale) await db.from("sales").update({ amount_paid: paid, pay_status: payStatus(Number(sale.total), paid) }).eq("id", input.sale_id);
+    if (sale) {
+      // amount_paid borné au total (le statut reste « payee » en cas de surpaiement).
+      const clamped = Math.min(Number(sale.total), paid);
+      await db.from("sales").update({ amount_paid: clamped, pay_status: payStatus(Number(sale.total), paid) }).eq("id", input.sale_id);
+    }
   }
 }
 

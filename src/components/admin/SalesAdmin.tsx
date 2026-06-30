@@ -165,8 +165,8 @@ function SaleModal({ clients, products, pending, onClose, onSave }: { clients: L
                   {products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.stock} en stock)</option>)}
                 </select>
                 <input className="input w-32" placeholder="Nom" value={it.name} onChange={(e) => setItem(i, { name: e.target.value })} />
-                <input type="number" step="0.001" className="input w-24" placeholder="Prix" value={it.unit_price} onChange={(e) => setItem(i, { unit_price: Number(e.target.value) })} />
-                <input type="number" className="input w-16" value={it.quantity} onChange={(e) => setItem(i, { quantity: Number(e.target.value) })} />
+                <input type="number" step="0.001" className="input w-24" placeholder="Prix" value={it.unit_price} onChange={(e) => setItem(i, { unit_price: Number(e.target.value) || 0 })} />
+                <input type="number" className="input w-16" value={it.quantity} onChange={(e) => setItem(i, { quantity: Number(e.target.value) || 0 })} />
                 <button onClick={() => setItems((a) => a.filter((_, j) => j !== i))} className="grid h-9 w-9 place-items-center rounded-lg border border-line text-muted hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}

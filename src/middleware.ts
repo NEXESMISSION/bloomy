@@ -14,7 +14,11 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
   }
-  return NextResponse.next();
+  // Expose le chemin courant aux layouts (pour re-valider le membre côté serveur :
+  // le cookie signé ne suffit pas, un membre désactivé doit perdre l'accès).
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

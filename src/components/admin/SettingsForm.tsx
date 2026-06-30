@@ -63,6 +63,21 @@ export default function SettingsForm({ settings }: { settings: ShopSettings }) {
       </div>
 
       <div className="rounded-2xl border border-line bg-white p-6">
+        <h2 className="mb-4 font-semibold text-ink">Réseaux sociaux</h2>
+        <p className="mb-4 text-xs text-muted">Liens affichés dans le pied de page (laisser vide = icône masquée).</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Instagram (URL)</span>
+            <input className="input" type="url" value={form.shop_instagram} onChange={(e) => set({ shop_instagram: e.target.value })} placeholder="https://instagram.com/votre_page" />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Facebook (URL)</span>
+            <input className="input" type="url" value={form.shop_facebook} onChange={(e) => set({ shop_facebook: e.target.value })} placeholder="https://facebook.com/votre_page" />
+          </label>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-6">
         <h2 className="mb-4 font-semibold text-ink">Bandeau d'annonce</h2>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-muted">Texte affiché en haut du site (vide = masqué)</span>

@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { CUSTOMER_COOKIE, customerToken } from "@/lib/customerAuth";
+import { CUSTOMER_COOKIE, customerToken, normalizePhone } from "@/lib/customerAuth";
 import { createCustomer, authenticateCustomer, type SignupInput } from "@/lib/data/customers";
 import { spinForPrize, recordWin, claimWin } from "@/lib/data/roulette";
 import { getSettings } from "@/lib/data/settings";
@@ -78,8 +78,8 @@ export type AuthResult = { ok: true; name: string } | { ok: false; error: string
 export async function signup(input: SignupInput & { winId?: string }): Promise<AuthResult> {
   try {
     if (!input.name?.trim() || input.name.trim().length < 2) return { ok: false, error: "Veuillez saisir votre nom." };
-    const phone = (input.phone || "").replace(/[\s.\-]/g, "");
-    if (!/^(\+?216)?[0-9]{8}$/.test(phone)) return { ok: false, error: "Numéro de téléphone invalide (8 chiffres)." };
+    const phone = normalizePhone(input.phone || "");
+    if (!/^[0-9]{8}$/.test(phone)) return { ok: false, error: "Numéro de téléphone invalide (8 chiffres)." };
     if (!input.password || input.password.length < 6) return { ok: false, error: "Mot de passe trop court (6 caractères min)." };
     const customer = await createCustomer({ ...input, phone });
     setCustomerCookie(customer.id);

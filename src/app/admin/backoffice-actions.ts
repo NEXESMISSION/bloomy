@@ -61,7 +61,7 @@ export async function cancelSaleAction(id: string) {
 export async function recordPaymentAction(input: { sale_id?: string | null; client_id: string | null; amount: number; method?: string; note?: string }) {
   const { me, actorId } = await actor();
   await recordPayment({ ...input, actorId });
-  await logActivity({ actorId: me.id, actorName: me.name, action: "Encaissement", entityType: "payment", entityId: input.client_id, detail: `${input.amount} DT` });
+  await logActivity({ actorId: me.id, actorName: me.name, action: "Encaissement", entityType: "payment", entityId: input.sale_id ?? input.client_id, detail: `${input.amount} DT` });
   revalidatePath("/crm/ventes");
   revalidatePath("/crm/clients");
 }

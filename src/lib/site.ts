@@ -9,11 +9,8 @@ export const site = {
   // admin (table `settings` → shop_phone / shop_phone_2 / shop_email) et lus via
   // getSettings(). Voir src/lib/phone.ts pour le formatage / liens WhatsApp.
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-  social: {
-    instagram: "https://instagram.com/bloomy",
-    facebook: "https://facebook.com/bloomy",
-    tiktok: "https://tiktok.com/@bloomy",
-  },
+  // Les liens réseaux sociaux sont pilotés depuis le super admin
+  // (settings → shop_instagram / shop_facebook), affichés via le pied de page.
   nav: [
     { label: "Accueil", href: "/" },
     { label: "Boutique", href: "/boutique" },
