@@ -14,6 +14,8 @@ import {
   Gift,
   Ticket,
   Images,
+  UserCog,
+  History,
   Settings,
   ExternalLink,
   LogOut,
@@ -33,6 +35,8 @@ const NAV = [
   { label: "Roulette", href: "/admin/roulette", icon: Gift },
   { label: "Golden Ticket", href: "/admin/golden", icon: Ticket },
   { label: "Avis", href: "/admin/avis", icon: Star },
+  { label: "Équipe", href: "/admin/equipe", icon: UserCog },
+  { label: "Activité", href: "/admin/activite", icon: History },
   { label: "Paramètres", href: "/admin/parametres", icon: Settings },
 ];
 

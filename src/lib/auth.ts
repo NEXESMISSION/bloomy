@@ -51,8 +51,12 @@ function timingSafeEqual(a: string, b: string): boolean {
   return r === 0;
 }
 
-/** Crée un jeton de session signé et horodaté (utilisé à la connexion). */
-export async function createSessionToken(): Promise<string> {
+/**
+ * Crée un jeton de session signé et horodaté.
+ * `actorId` = "owner" (connexion email/mot de passe) ou l'id d'un membre de
+ * l'équipe (connexion par PIN). Format : `issuedAt.actorId.sig`.
+ */
+export async function createSessionToken(actorId = "owner"): Promise<string> {
   const secret = getSecret();
   if (!secret) {
     throw new Error(
@@ -60,8 +64,9 @@ export async function createSessionToken(): Promise<string> {
     );
   }
   const issuedAt = Date.now().toString();
-  const sig = await hmacHex(issuedAt, secret);
-  return `${issuedAt}.${sig}`;
+  const payload = `${issuedAt}.${actorId}`;
+  const sig = await hmacHex(payload, secret);
+  return `${payload}.${sig}`;
 }
 
 /** Vérifie l'email + le mot de passe du compte admin (définis en .env). */
@@ -75,21 +80,44 @@ export function verifyCredentials(email: string, password: string): boolean {
   );
 }
 
-/** Vérifie la signature ET l'expiration du jeton de session. */
-export async function isValidSession(cookieValue: string | undefined): Promise<boolean> {
-  if (!cookieValue) return false;
+/** Vérifie la session et renvoie l'actorId ("owner" ou id équipe), sinon null. */
+async function verifySession(cookieValue: string | undefined): Promise<string | null> {
+  if (!cookieValue) return null;
   const secret = getSecret();
-  if (!secret) return false;
+  if (!secret) return null;
 
-  const dot = cookieValue.indexOf(".");
-  if (dot <= 0) return false;
-  const issuedAt = cookieValue.slice(0, dot);
-  const sig = cookieValue.slice(dot + 1);
+  const parts = cookieValue.split(".");
+  let issuedAt: string;
+  let actorId: string;
+  let sig: string;
+  let payload: string;
+  if (parts.length === 3) {
+    [issuedAt, actorId, sig] = parts;
+    payload = `${issuedAt}.${actorId}`;
+  } else if (parts.length === 2) {
+    // Ancien format (signait uniquement l'horodatage) → propriétaire.
+    [issuedAt, sig] = parts;
+    actorId = "owner";
+    payload = issuedAt;
+  } else {
+    return null;
+  }
 
   const ts = Number(issuedAt);
-  if (!Number.isFinite(ts) || ts <= 0) return false;
-  if (Date.now() - ts > SESSION_MAX_AGE_MS) return false;
+  if (!Number.isFinite(ts) || ts <= 0) return null;
+  if (Date.now() - ts > SESSION_MAX_AGE_MS) return null;
 
-  const expected = await hmacHex(issuedAt, secret);
-  return timingSafeEqual(sig, expected);
+  const expected = await hmacHex(payload, secret);
+  if (!timingSafeEqual(sig, expected)) return null;
+  return actorId;
+}
+
+/** Vrai si le cookie de session est valide (utilisé par le middleware). */
+export async function isValidSession(cookieValue: string | undefined): Promise<boolean> {
+  return (await verifySession(cookieValue)) !== null;
+}
+
+/** Renvoie l'identifiant de l'acteur connecté ("owner" ou id équipe), ou null. */
+export async function actorIdFromSession(cookieValue: string | undefined): Promise<string | null> {
+  return verifySession(cookieValue);
 }

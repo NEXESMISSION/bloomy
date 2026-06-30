@@ -19,6 +19,9 @@ import {
   deleteGoldenBatch,
   processGoldenExpiries,
 } from "@/lib/data/golden";
+import { authenticateByPin, createStaff, updateStaff, deleteStaff, type StaffRole } from "@/lib/data/staff";
+import { logActivity } from "@/lib/data/activity";
+import { requireOwner } from "@/lib/staffSession";
 import type { OrderStatus, ReviewStatus, ShopSettings } from "@/lib/types";
 
 export async function login(
@@ -41,6 +44,48 @@ export async function login(
 
 export async function logout() {
   cookies().delete(ADMIN_COOKIE);
+}
+
+/* ─────────────── Équipe (connexion PIN + gestion) ─────────────── */
+
+function setSessionCookie(token: string) {
+  cookies().set(ADMIN_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
+export async function staffLogin(pin: string): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
+  const staff = await authenticateByPin(pin);
+  if (!staff) return { ok: false, error: "Code PIN incorrect." };
+  setSessionCookie(await createSessionToken(staff.id));
+  await logActivity({ actorId: staff.id, actorName: staff.name, action: "Connexion" });
+  return { ok: true, name: staff.name };
+}
+
+export async function createStaffAction(input: { name: string; pin: string; role: StaffRole; color?: string }) {
+  const me = await requireOwner();
+  const s = await createStaff(input);
+  await logActivity({ actorId: me.id, actorName: me.name, action: "Ajout d'un membre", entityType: "staff", entityId: s.id, detail: `${s.name} (${s.role})` });
+  revalidatePath("/admin/equipe");
+  return s;
+}
+
+export async function updateStaffAction(id: string, patch: { name?: string; role?: StaffRole; color?: string; active?: boolean; pin?: string }) {
+  const me = await requireOwner();
+  await updateStaff(id, patch);
+  await logActivity({ actorId: me.id, actorName: me.name, action: "Modification d'un membre", entityType: "staff", entityId: id });
+  revalidatePath("/admin/equipe");
+}
+
+export async function deleteStaffAction(id: string) {
+  const me = await requireOwner();
+  await deleteStaff(id);
+  await logActivity({ actorId: me.id, actorName: me.name, action: "Suppression d'un membre", entityType: "staff", entityId: id });
+  revalidatePath("/admin/equipe");
 }
 
 export async function setOrderStatus(id: string, status: OrderStatus) {
