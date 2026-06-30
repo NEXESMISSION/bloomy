@@ -44,7 +44,15 @@ export default function OrdersAdmin({ orders }: { orders: Order[] }) {
       o.items.map((i) => `${i.name} x${i.quantity}`).join(" | "),
       o.subtotal, o.discount_amount, o.discount_code ?? "", o.delivery_fee, o.total, o.source ?? "", o.status,
     ]);
-    const csv = [head, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    // Anti-injection de formule CSV : un champ saisi par le client (nom, adresse,
+    // note…) commençant par = + - @ pourrait s'exécuter à l'ouverture dans Excel.
+    // On le neutralise en le préfixant d'une apostrophe (Excel le lit alors texte).
+    const cell = (c: any) => {
+      let s = String(c ?? "");
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const csv = [head, ...rows].map((r) => r.map(cell).join(",")).join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

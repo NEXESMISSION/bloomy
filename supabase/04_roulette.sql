@@ -48,11 +48,15 @@ create index if not exists roulette_wins_created_idx on roulette_wins (created_a
 insert into settings (key, value) values ('roulette_enabled', 'true')
 on conflict (key) do nothing;
 
--- Prix de démarrage (les poids = % puisqu'ils totalisent 100)
-insert into roulette_prizes (label, type, code, product_name, weight, color, sort_order) values
-  ('-10%', 'code', 'BLOOMY10', null, 30, '#1f2937', 1),
+-- Prix de démarrage (les poids = % puisqu'ils totalisent 100).
+-- `where not exists` → seed UNIQUEMENT si la table est vide : ré-exécuter cette
+-- migration ne crée jamais de doublons (cf. migration 13 qui a nettoyé l'historique).
+insert into roulette_prizes (label, type, code, product_name, weight, color, sort_order)
+select * from (values
+  ('-10%', 'code', 'BLOOMY10', null::text, 30, '#1f2937', 1),
   ('Rien cette fois', 'none', null, null, 30, '#9ca3af', 2),
   ('-15%', 'code', 'INSTA15', null, 22, '#b45309', 3),
   ('-20%', 'code', 'TIKTOK20', null, 13, '#0f766e', 4),
   ('Parfum offert 🎁', 'product', null, 'Parfum surprise 50ml', 5, '#7c2d12', 5)
-on conflict do nothing;
+) as v(label, type, code, product_name, weight, color, sort_order)
+where not exists (select 1 from roulette_prizes);

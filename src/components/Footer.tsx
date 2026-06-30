@@ -2,8 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Facebook, Lock } from "lucide-react";
 import { site } from "@/lib/site";
+import type { ShopSettings } from "@/lib/types";
+import { phoneDisplay, telHref } from "@/lib/phone";
 
-export default function Footer() {
+export default function Footer({ settings }: { settings: ShopSettings }) {
   return (
     <footer className="mt-20 border-t border-line bg-sand">
       <div className="container-bloomy grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.1fr]">
@@ -41,8 +43,15 @@ export default function Footer() {
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wider text-ink">Contact</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted">
-            <li>+216 {site.phone.slice(3)}</li>
-            <li>{site.email}</li>
+            {settings.shop_phone && (
+              <li><a href={telHref(settings.shop_phone)} className="transition hover:text-ink">{phoneDisplay(settings.shop_phone)}</a></li>
+            )}
+            {settings.shop_phone_2 && (
+              <li><a href={telHref(settings.shop_phone_2)} className="transition hover:text-ink">{phoneDisplay(settings.shop_phone_2)}</a></li>
+            )}
+            {settings.shop_email && (
+              <li><a href={`mailto:${settings.shop_email}`} className="transition hover:text-ink">{settings.shop_email}</a></li>
+            )}
             <li>Tunis, Tunisie</li>
           </ul>
         </div>

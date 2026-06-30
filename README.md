@@ -37,10 +37,14 @@ enregistrées localement). Admin accessible sur `/admin` avec le mot de passe pa
 ## 🗄️ Configurer Supabase (production)
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
-2. **SQL Editor → New query** : exécutez [`supabase/schema.sql`](supabase/schema.sql) puis
-   [`supabase/02_features.sql`](supabase/02_features.sql) — cela crée les tables (produits,
-   commandes, **codes promo**, **paramètres**), la sécurité RLS, la fonction de redemption
-   atomique, et insère les 4 parfums + des codes de démarrage.
+2. **SQL Editor → New query** : exécutez **dans l'ordre** tous les fichiers de
+   [`supabase/`](supabase/) — `schema.sql`, puis `02` → `11` (ou
+   `node scripts/db.cjs supabase/<fichier>.sql`). Cela crée toutes les tables
+   (produits, commandes, codes promo, paramètres, avis, roulette, bannières,
+   golden tickets, back-office), insère les données de démarrage, et **active la
+   sécurité RLS sur TOUTES les tables** (migration `10_security_rls.sql` —
+   indispensable : sans elle, les données sont lisibles/modifiables avec la clé
+   publique `anon`).
 3. **Project Settings → API** : récupérez l'URL et les clés.
 4. Copiez `.env.example` en `.env.local` et remplissez :
 
@@ -51,8 +55,10 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...        # secret, côté serveur uniquement
 ADMIN_PASSWORD=un-mot-de-passe-fort     # ⚠️ à changer
 ADMIN_SESSION_SECRET=chaîne-aléatoire-longue
 NEXT_PUBLIC_SITE_URL=https://votre-domaine.tn
-NEXT_PUBLIC_SHOP_PHONE=216XXXXXXXX
 ```
+
+> Le **téléphone** et l'**email** de contact ne sont plus des variables d'env :
+> ils se gèrent depuis le super admin (`/admin/parametres` → **Contact**).
 
 Dès que `SUPABASE_SERVICE_ROLE_KEY` est présent, l'app bascule automatiquement sur Supabase.
 

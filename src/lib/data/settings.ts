@@ -6,7 +6,10 @@ import type { ShopSettings } from "@/lib/types";
 const DEFAULTS: ShopSettings = {
   delivery_fee: DELIVERY_FEE,
   free_delivery_threshold: FREE_DELIVERY_THRESHOLD,
-  shop_phone: process.env.NEXT_PUBLIC_SHOP_PHONE || "21600000000",
+  // Coordonnées pilotées depuis /admin/parametres (jamais codées en dur).
+  shop_phone: "58415520",
+  shop_phone_2: "58415506",
+  shop_email: "bloomy.tn@gmail.com",
   announcement: "🚚 Livraison partout en Tunisie · Paiement à la livraison",
   reviews_enabled: true,
   roulette_enabled: true,
@@ -22,6 +25,8 @@ function fromMap(map: Record<string, string>): ShopSettings {
     delivery_fee: num(map.delivery_fee, DEFAULTS.delivery_fee),
     free_delivery_threshold: num(map.free_delivery_threshold, DEFAULTS.free_delivery_threshold),
     shop_phone: map.shop_phone || DEFAULTS.shop_phone,
+    shop_phone_2: map.shop_phone_2 || DEFAULTS.shop_phone_2,
+    shop_email: map.shop_email || DEFAULTS.shop_email,
     announcement: map.announcement ?? DEFAULTS.announcement,
     reviews_enabled: map.reviews_enabled !== "false",
     roulette_enabled: map.roulette_enabled !== "false",

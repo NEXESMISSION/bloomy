@@ -69,15 +69,26 @@ export async function createSessionToken(actorId = "owner"): Promise<string> {
   return `${payload}.${sig}`;
 }
 
+/** Mot de passe de dev (ne DOIT jamais servir en production). */
+const DEV_DEFAULT_PASSWORD = "bloomy-admin";
+
 /** Vérifie l'email + le mot de passe du compte admin (définis en .env). */
 export function verifyCredentials(email: string, password: string): boolean {
+  const rawPassword = process.env.ADMIN_PASSWORD || "";
+  // Fail-closed : en production, on REFUSE toute connexion si le mot de passe
+  // n'est pas défini (ou laissé à la valeur de dev) — pas de défaut exploitable.
+  if (
+    process.env.NODE_ENV === "production" &&
+    (!rawPassword || rawPassword === DEV_DEFAULT_PASSWORD)
+  ) {
+    return false;
+  }
   const expectedEmail = (process.env.ADMIN_EMAIL || "admin@bloomy.tn").trim().toLowerCase();
-  const expectedPassword = process.env.ADMIN_PASSWORD || "bloomy-admin";
-  return (
-    email.trim().toLowerCase() === expectedEmail &&
-    password.length > 0 &&
-    password === expectedPassword
-  );
+  const expectedPassword = rawPassword || DEV_DEFAULT_PASSWORD;
+  // Comparaison à temps constant (évite la fuite d'info par timing).
+  const emailOk = timingSafeEqual(email.trim().toLowerCase(), expectedEmail);
+  const passOk = password.length > 0 && timingSafeEqual(password, expectedPassword);
+  return emailOk && passOk;
 }
 
 /** Vérifie la session et renvoie l'actorId ("owner" ou id équipe), sinon null. */

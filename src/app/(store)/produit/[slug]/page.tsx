@@ -71,7 +71,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <div className="container-bloomy py-6 sm:py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <nav className="flex items-center gap-1.5 py-3 text-xs text-muted">
         <Link href="/" className="hover:text-ink">Accueil</Link>
         <ChevronRight className="h-3 w-3" />

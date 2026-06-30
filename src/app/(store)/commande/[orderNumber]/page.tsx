@@ -1,15 +1,19 @@
 import Link from "next/link";
 import { Phone, MapPin, ArrowRight } from "lucide-react";
 import { getOrderByNumber } from "@/lib/data/orders";
+import { getSettings } from "@/lib/data/settings";
 import { formatTND } from "@/lib/utils";
-import { site } from "@/lib/site";
+import { telHref } from "@/lib/phone";
 import SuccessCheck from "@/components/SuccessCheck";
 import ClearCart from "@/components/ClearCart";
 
 export const dynamic = "force-dynamic";
 
 export default async function ConfirmationPage({ params }: { params: { orderNumber: string } }) {
-  const order = await getOrderByNumber(params.orderNumber);
+  const [order, settings] = await Promise.all([
+    getOrderByNumber(params.orderNumber),
+    getSettings(),
+  ]);
 
   if (!order) {
     return (
@@ -79,7 +83,9 @@ export default async function ConfirmationPage({ params }: { params: { orderNumb
             Continuer mes achats
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
-          <a href={`tel:+${site.phone}`} className="btn-outline w-full sm:w-auto">Nous appeler</a>
+          {settings.shop_phone && (
+            <a href={telHref(settings.shop_phone)} className="btn-outline w-full sm:w-auto">Nous appeler</a>
+          )}
         </div>
       </div>
     </div>

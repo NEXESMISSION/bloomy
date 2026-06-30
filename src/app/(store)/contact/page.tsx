@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
 import { Phone, Mail, MessageCircle, MapPin, Clock } from "lucide-react";
 import ContactForm from "@/components/ContactForm";
-import { site, whatsappLink } from "@/lib/site";
+import { getSettings } from "@/lib/data/settings";
+import { phoneDisplay, telHref, whatsappHref } from "@/lib/phone";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Contact",
   description: "Une question ? Contactez l'équipe Bloomy.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getSettings();
   const cards = [
-    { icon: Phone, title: "Téléphone", value: `+216 ${site.phone.slice(3)}`, href: `tel:+${site.phone}` },
-    { icon: MessageCircle, title: "WhatsApp", value: "Discuter", href: whatsappLink("Bonjour Bloomy 👋") },
-    { icon: Mail, title: "Email", value: site.email, href: `mailto:${site.email}` },
-  ];
+    settings.shop_phone && { icon: Phone, title: "Téléphone", value: phoneDisplay(settings.shop_phone), href: telHref(settings.shop_phone) },
+    settings.shop_phone_2 && { icon: Phone, title: "Téléphone (2)", value: phoneDisplay(settings.shop_phone_2), href: telHref(settings.shop_phone_2) },
+    settings.shop_phone && { icon: MessageCircle, title: "WhatsApp", value: "Discuter", href: whatsappHref(settings.shop_phone, "Bonjour Bloomy 👋") },
+    settings.shop_email && { icon: Mail, title: "Email", value: settings.shop_email, href: `mailto:${settings.shop_email}` },
+  ].filter(Boolean) as { icon: typeof Phone; title: string; value: string; href: string }[];
   return (
     <div className="container-bloomy py-12 sm:py-16">
       <div className="text-center">

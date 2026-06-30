@@ -21,8 +21,27 @@ import {
 } from "@/lib/data/golden";
 import { authenticateByPin, createStaff, updateStaff, deleteStaff, type StaffRole } from "@/lib/data/staff";
 import { logActivity } from "@/lib/data/activity";
-import { requireOwner } from "@/lib/staffSession";
+import { requireOwner, getCurrentStaff, type CurrentStaff } from "@/lib/staffSession";
 import type { OrderStatus, ReviewStatus, ShopSettings } from "@/lib/types";
+
+/** Identifie l'admin connecté (super admin OU équipe) et bloque si non connecté.
+ *  Remplace requireAdmin pour les mutations afin de TRACER qui fait quoi. */
+async function adminActor(): Promise<CurrentStaff> {
+  const me = await getCurrentStaff();
+  if (!me) throw new Error("Non autorisé. Veuillez vous reconnecter.");
+  return me;
+}
+
+/** Écrit une ligne au journal d'activité au nom de l'acteur. */
+async function audit(me: CurrentStaff, action: string, entityType?: string, entityId?: string | null, detail?: string) {
+  await logActivity({ actorId: me.id, actorName: me.name, action, entityType, entityId, detail });
+}
+
+/** Qui suis-je ? (pour l'UI : nom, rôle, super admin). null si non connecté. */
+export async function whoami(): Promise<{ name: string; role: "owner" | "staff"; isSuperAdmin: boolean } | null> {
+  const me = await getCurrentStaff();
+  return me ? { name: me.name, role: me.role, isSuperAdmin: me.isSuperAdmin } : null;
+}
 
 export async function login(
   email: string,
@@ -39,6 +58,7 @@ export async function login(
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
+  await logActivity({ actorId: "owner", actorName: "Super Admin", action: "Connexion (super admin)" });
   return { ok: true };
 }
 
@@ -89,22 +109,25 @@ export async function deleteStaffAction(id: string) {
 }
 
 export async function setOrderStatus(id: string, status: OrderStatus) {
-  await requireAdmin();
+  const me = await adminActor();
   await updateOrderStatus(id, status);
+  await audit(me, "Statut commande modifié", "order", id, status);
   revalidatePath("/admin");
   revalidatePath("/admin/commandes");
 }
 
 export async function removeOrder(id: string) {
-  await requireAdmin();
+  const me = await adminActor();
   await deleteOrder(id);
+  await audit(me, "Commande supprimée", "order", id);
   revalidatePath("/admin");
   revalidatePath("/admin/commandes");
 }
 
 export async function saveProduct(input: ProductInput) {
-  await requireAdmin();
+  const me = await adminActor();
   const product = await upsertProduct(input);
+  await audit(me, input.id ? "Produit modifié" : "Produit créé", "product", product.id, product.name);
   revalidatePath("/admin/produits");
   revalidatePath("/boutique");
   revalidatePath("/");
@@ -112,8 +135,9 @@ export async function saveProduct(input: ProductInput) {
 }
 
 export async function removeProduct(id: string) {
-  await requireAdmin();
+  const me = await adminActor();
   await deleteProduct(id);
+  await audit(me, "Produit supprimé", "product", id);
   revalidatePath("/admin/produits");
   revalidatePath("/boutique");
   revalidatePath("/");
@@ -126,6 +150,8 @@ export async function uploadProductImage(
   await requireAdmin();
   const file = formData.get("file") as File | null;
   if (!file || typeof file === "string") return { ok: false, error: "Aucun fichier." };
+  if (file.size > 8 * 1024 * 1024) return { ok: false, error: "Image trop lourde (max 8 Mo)." };
+  if (!file.type.startsWith("image/")) return { ok: false, error: "Fichier image invalide." };
   const db = supabaseAdmin();
   if (!db) return { ok: false, error: "Stockage indisponible — configurez Supabase." };
   try {
@@ -150,6 +176,8 @@ export async function uploadImage(
   await requireAdmin();
   const file = formData.get("file") as File | null;
   if (!file || typeof file === "string") return { ok: false, error: "Aucun fichier." };
+  if (file.size > 8 * 1024 * 1024) return { ok: false, error: "Image trop lourde (max 8 Mo)." };
+  if (!file.type.startsWith("image/")) return { ok: false, error: "Fichier image invalide." };
   const db = supabaseAdmin();
   if (!db) return { ok: false, error: "Stockage indisponible — configurez Supabase." };
   try {
@@ -170,23 +198,26 @@ export async function uploadImage(
 /* ─────────────── Codes promo ─────────────── */
 
 export async function saveCode(input: DiscountInput) {
-  await requireAdmin();
+  const me = await adminActor();
   const code = await upsertCode(input);
+  await audit(me, input.id ? "Code promo modifié" : "Code promo créé", "discount_code", code.id, code.code);
   revalidatePath("/admin/codes");
   return code;
 }
 
 export async function removeCode(id: string) {
-  await requireAdmin();
+  const me = await adminActor();
   await deleteCode(id);
+  await audit(me, "Code promo supprimé", "discount_code", id);
   revalidatePath("/admin/codes");
 }
 
 /* ─────────────── Paramètres ─────────────── */
 
 export async function saveSettings(patch: Partial<ShopSettings>) {
-  await requireAdmin();
+  const me = await adminActor();
   await updateSettings(patch);
+  await audit(me, "Paramètres modifiés", "settings", null, Object.keys(patch).join(", "));
   revalidatePath("/admin/parametres");
   revalidatePath("/", "layout");
 }
@@ -194,30 +225,34 @@ export async function saveSettings(patch: Partial<ShopSettings>) {
 /* ─────────────── Avis clients ─────────────── */
 
 export async function moderateReview(id: string, status: ReviewStatus) {
-  await requireAdmin();
+  const me = await adminActor();
   await setReviewStatus(id, status);
+  await audit(me, "Avis modéré", "review", id, status);
   revalidatePath("/admin/avis");
 }
 
 export async function removeReview(id: string) {
-  await requireAdmin();
+  const me = await adminActor();
   await deleteReview(id);
+  await audit(me, "Avis supprimé", "review", id);
   revalidatePath("/admin/avis");
 }
 
 /* ─────────────── Roulette ─────────────── */
 
 export async function savePrize(input: PrizeInput) {
-  await requireAdmin();
+  const me = await adminActor();
   const prize = await upsertPrize(input);
+  await audit(me, input.id ? "Lot roulette modifié" : "Lot roulette créé", "roulette_prize", prize.id, prize.label);
   revalidatePath("/admin/roulette");
   revalidatePath("/", "layout");
   return prize;
 }
 
 export async function removePrize(id: string) {
-  await requireAdmin();
+  const me = await adminActor();
   await deletePrize(id);
+  await audit(me, "Lot roulette supprimé", "roulette_prize", id);
   revalidatePath("/admin/roulette");
   revalidatePath("/", "layout");
 }
@@ -225,16 +260,18 @@ export async function removePrize(id: string) {
 /* ─────────────── Bannières (hero) ─────────────── */
 
 export async function saveBanner(input: BannerInput) {
-  await requireAdmin();
+  const me = await adminActor();
   const banner = await upsertBanner(input);
+  await audit(me, input.id ? "Bannière modifiée" : "Bannière créée", "banner", banner.id);
   revalidatePath("/admin/bannieres");
   revalidatePath("/");
   return banner;
 }
 
 export async function removeBanner(id: string) {
-  await requireAdmin();
+  const me = await adminActor();
   await deleteBanner(id);
+  await audit(me, "Bannière supprimée", "banner", id);
   revalidatePath("/admin/bannieres");
   revalidatePath("/");
 }
@@ -248,21 +285,24 @@ export async function createGoldenBatchAction(input: {
   winner_count: number;
   claim_days: number;
 }) {
-  await requireAdmin();
+  const me = await adminActor();
   const batch = await createGoldenBatch(input);
+  await audit(me, "Lot Golden Ticket créé", "golden_batch", batch.id, batch.name);
   revalidatePath("/admin/golden");
   return batch;
 }
 
 export async function toggleGoldenBatchAction(id: string, active: boolean) {
-  await requireAdmin();
+  const me = await adminActor();
   await setGoldenBatchActive(id, active);
+  await audit(me, active ? "Golden Ticket activé" : "Golden Ticket désactivé", "golden_batch", id);
   revalidatePath("/admin/golden");
 }
 
 export async function removeGoldenBatchAction(id: string) {
-  await requireAdmin();
+  const me = await adminActor();
   await deleteGoldenBatch(id);
+  await audit(me, "Lot Golden Ticket supprimé", "golden_batch", id);
   revalidatePath("/admin/golden");
 }
 

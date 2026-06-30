@@ -1,13 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { whatsappHref } from "@/lib/phone";
 
 export default function WhatsAppButton({ phone, message }: { phone: string; message?: string }) {
-  const num = (phone || "").replace(/\D/g, "");
-  if (num.length < 8) return null;
-  const href = `https://wa.me/${num}?text=${encodeURIComponent(
-    message || "Bonjour Bloomy 👋, j'ai une question sur vos parfums.",
-  )}`;
+  const href = whatsappHref(phone, message);
+  if (!href) return null;
 
   return (
     <motion.a

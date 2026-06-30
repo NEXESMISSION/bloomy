@@ -17,7 +17,8 @@ export type OptimizeOptions = {
  */
 export async function optimizeToWebp(input: Buffer, opts: OptimizeOptions = {}): Promise<Buffer> {
   const { maxWidth = 1400, maxHeight = 1800, quality = 80 } = opts;
-  return sharp(input)
+  // limitInputPixels borne le travail de décodage (anti « decompression bomb »).
+  return sharp(input, { limitInputPixels: 40_000_000, failOn: "error" })
     .rotate()
     .resize({ width: maxWidth, height: maxHeight, fit: "inside", withoutEnlargement: true })
     .webp({ quality, effort: 5, smartSubsample: true })

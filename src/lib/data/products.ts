@@ -43,7 +43,12 @@ export async function getProducts(): Promise<Product[]> {
     .select("*")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
-  if (error || !data) return (await localGetProducts()).filter((p) => p.is_active);
+  // Supabase configuré mais en erreur : NE PAS servir le catalogue de démo
+  // (prix/stock figés) — on journalise et on renvoie vide pour ne pas masquer la panne.
+  if (error || !data) {
+    console.error("[getProducts] Supabase error:", error?.message);
+    return [];
+  }
   return data.map(mapRow);
 }
 
@@ -55,7 +60,10 @@ export async function getAllProducts(): Promise<Product[]> {
     .from("products")
     .select("*")
     .order("sort_order", { ascending: true });
-  if (error || !data) return localGetProducts();
+  if (error || !data) {
+    console.error("[getAllProducts] Supabase error:", error?.message);
+    return [];
+  }
   return data.map(mapRow);
 }
 

@@ -5,9 +5,10 @@ export const site = {
   taglineFr: "Affirme ton style. Vaporise ta confiance.",
   description:
     "Bloomy — sprays parfumés pour homme. Des sillages audacieux, frais et inoubliables. Livraison partout en Tunisie, paiement à la livraison.",
-  phone: process.env.NEXT_PUBLIC_SHOP_PHONE || "21600000000",
+  // Le téléphone et l'email NE sont PAS ici : ils sont pilotés depuis le super
+  // admin (table `settings` → shop_phone / shop_phone_2 / shop_email) et lus via
+  // getSettings(). Voir src/lib/phone.ts pour le formatage / liens WhatsApp.
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-  email: "contact@bloomy.tn",
   social: {
     instagram: "https://instagram.com/bloomy",
     facebook: "https://facebook.com/bloomy",
@@ -20,8 +21,3 @@ export const site = {
     { label: "Contact", href: "/contact" },
   ],
 } as const;
-
-export function whatsappLink(message: string): string {
-  const phone = site.phone.replace(/[^0-9]/g, "");
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-}

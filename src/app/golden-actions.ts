@@ -1,6 +1,7 @@
 "use server";
 
 import { revealGoldenTicket, claimGoldenTicket, type RevealResult, type ClaimResult } from "@/lib/data/golden";
+import { clientErrorMessage } from "@/lib/errors";
 
 export async function revealTicket(token: string): Promise<RevealResult> {
   try {
@@ -13,7 +14,7 @@ export async function revealTicket(token: string): Promise<RevealResult> {
 export async function claimTicket(token: string, name: string, phone: string): Promise<ClaimResult> {
   try {
     return await claimGoldenTicket(token, name, phone);
-  } catch (e: any) {
-    return { ok: false, error: e?.message ?? "Une erreur est survenue." };
+  } catch (e) {
+    return { ok: false, error: clientErrorMessage(e) };
   }
 }

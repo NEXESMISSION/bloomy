@@ -42,10 +42,24 @@ export default function SettingsForm({ settings }: { settings: ShopSettings }) {
 
       <div className="rounded-2xl border border-line bg-white p-6">
         <h2 className="mb-4 font-semibold text-ink">Contact</h2>
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-muted">Téléphone (format international, ex : 21655123456)</span>
-          <input className="input" value={form.shop_phone} onChange={(e) => set({ shop_phone: e.target.value })} />
-        </label>
+        <p className="mb-4 text-xs text-muted">
+          Ces coordonnées s'affichent automatiquement partout sur le site (pied de page, page contact,
+          bouton WhatsApp). Saisissez les numéros au format local à 8 chiffres (ex&nbsp;: 58415520).
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Téléphone principal (WhatsApp)</span>
+            <input className="input" inputMode="tel" value={form.shop_phone} onChange={(e) => set({ shop_phone: e.target.value })} placeholder="58415520" />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Téléphone secondaire</span>
+            <input className="input" inputMode="tel" value={form.shop_phone_2} onChange={(e) => set({ shop_phone_2: e.target.value })} placeholder="58415506" />
+          </label>
+          <label className="block sm:col-span-2">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Email de contact</span>
+            <input className="input" type="email" value={form.shop_email} onChange={(e) => set({ shop_email: e.target.value })} placeholder="bloomy.tn@gmail.com" />
+          </label>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-line bg-white p-6">

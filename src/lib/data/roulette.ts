@@ -126,16 +126,20 @@ export async function claimWin(winId: string, customerId: string, phone: string)
     return withStoreLock(async () => {
       const all = await localGetWins();
       const idx = all.findIndex((w) => w.id === winId);
-      if (idx >= 0) {
+      // On ne (ré)attribue JAMAIS un gain déjà réclamé (anti-IDOR / vol de gain).
+      if (idx >= 0 && !all[idx].claimed) {
         all[idx] = { ...all[idx], customer_id: customerId, phone, claimed: true };
         await localSaveWins(all);
       }
     });
   }
+  // `eq("claimed", false)` : un gain ne peut être réclamé qu'UNE fois, et un
+  // client ne peut pas réécrire le propriétaire d'un gain déjà attribué.
   const { error } = await db
     .from("roulette_wins")
     .update({ customer_id: customerId, phone, claimed: true })
-    .eq("id", winId);
+    .eq("id", winId)
+    .eq("claimed", false);
   if (error) throw new Error(error.message);
 }
 

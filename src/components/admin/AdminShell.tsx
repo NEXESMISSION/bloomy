@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -25,9 +25,12 @@ import {
   X,
   Briefcase,
   Store,
+  ShieldCheck,
 } from "lucide-react";
-import { logout } from "@/app/admin/actions";
+import { logout, whoami } from "@/app/admin/actions";
 import { cn } from "@/lib/utils";
+
+type Me = { name: string; role: "owner" | "staff"; isSuperAdmin: boolean };
 
 const STORE_NAV = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
@@ -53,6 +56,11 @@ export default function AdminShell({ children, variant = "store" }: { children: 
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [me, setMe] = useState<Me | null>(null);
+
+  useEffect(() => {
+    whoami().then(setMe).catch(() => {});
+  }, []);
 
   const isCrm = variant === "crm";
   const nav = isCrm ? CRM_NAV : STORE_NAV;
@@ -92,9 +100,35 @@ export default function AdminShell({ children, variant = "store" }: { children: 
             </Link>
           );
         })}
+
+        {me?.isSuperAdmin && (
+          <Link
+            href="/admin/systeme"
+            onClick={() => setOpen(false)}
+            className={cn(
+              "mt-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-semibold transition",
+              pathname === "/admin/systeme"
+                ? "border-ink bg-ink text-white"
+                : "border-ink/20 bg-ink/[0.04] text-ink hover:bg-ink/10",
+            )}
+          >
+            <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.9} /> Super Admin
+          </Link>
+        )}
       </nav>
 
       <div className="mt-auto flex flex-col gap-1 border-t border-line pt-3">
+        {me && (
+          <div className="mb-1 flex items-center gap-2.5 rounded-xl bg-white px-3 py-2.5">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-xs font-semibold text-white">
+              {me.name.trim().charAt(0).toUpperCase() || "?"}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium text-ink">{me.name}</span>
+              <span className="block text-[11px] text-muted">{me.isSuperAdmin ? "Super Admin" : me.role === "owner" ? "Propriétaire" : "Équipe"}</span>
+            </span>
+          </div>
+        )}
         <Link href={cross.href} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-ink shadow-sm transition hover:bg-sand">
           <cross.icon className="h-[18px] w-[18px]" /> {cross.label}
         </Link>

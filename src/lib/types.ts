@@ -88,7 +88,9 @@ export type DiscountCode = {
 export type ShopSettings = {
   delivery_fee: number;
   free_delivery_threshold: number;
-  shop_phone: string;
+  shop_phone: string; // numéro principal (= WhatsApp)
+  shop_phone_2: string; // numéro secondaire
+  shop_email: string; // email de contact
   announcement: string;
   reviews_enabled: boolean;
   roulette_enabled: boolean;

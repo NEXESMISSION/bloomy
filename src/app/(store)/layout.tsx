@@ -27,7 +27,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <div className="flex min-h-screen flex-col bg-white">
         <Navbar announcement={settings.announcement} />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer settings={settings} />
         <CartDrawer />
       </div>
       {settings.roulette_enabled && <RouletteWidget prizes={prizes} isLoggedIn={!!customer} />}

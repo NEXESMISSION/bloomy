@@ -4,6 +4,7 @@ import { getProductById } from "@/lib/data/products";
 import { getSettings } from "@/lib/data/settings";
 import { validateCode, redeemCode } from "@/lib/data/discounts";
 import { generateOrderNumber } from "@/lib/utils";
+import { UserError } from "@/lib/errors";
 import type { NewOrderInput, Order, OrderItem, OrderStatus } from "@/lib/types";
 
 function mapOrderRow(o: any): Omit<Order, "items"> {
@@ -43,7 +44,7 @@ async function priceItems(input: NewOrderInput["items"]): Promise<OrderItem[]> {
     const quantity = Math.max(1, Math.floor(Number(it.quantity) || 1));
     if (it.product_id) {
       const product = await getProductById(it.product_id);
-      if (!product || !product.is_active) throw new Error(`Produit indisponible : ${it.name}`);
+      if (!product || !product.is_active) throw new UserError(`Produit indisponible : ${it.name}`);
       out.push({ product_id: product.id, name: product.name, unit_price: product.price, quantity });
     } else {
       out.push({ product_id: null, name: it.name, unit_price: Number(it.unit_price) || 0, quantity });
@@ -54,7 +55,7 @@ async function priceItems(input: NewOrderInput["items"]): Promise<OrderItem[]> {
 
 /** Crée une commande (paiement à la livraison) avec code promo + suivi de source. */
 export async function createOrder(input: NewOrderInput): Promise<Order> {
-  if (!input.items.length) throw new Error("Votre panier est vide.");
+  if (!input.items.length) throw new UserError("Votre panier est vide.");
   const items = await priceItems(input.items);
   const subtotal = items.reduce((s, it) => s + it.unit_price * it.quantity, 0);
   const settings = await getSettings();
@@ -65,9 +66,9 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
 
   if (input.code && input.code.trim()) {
     const v = await validateCode(input.code.trim(), subtotal);
-    if (!v.ok || !v.code) throw new Error(v.message);
+    if (!v.ok || !v.code) throw new UserError(v.message);
     const redeemed = await redeemCode(v.code.code);
-    if (!redeemed) throw new Error("Ce code n'est plus disponible.");
+    if (!redeemed) throw new UserError("Ce code n'est plus disponible.");
     discount_amount = v.discount;
     discount_code = v.code.code;
     if (v.code.source) source = v.code.source; // la source du code prime (suivi des leads)
