@@ -5,6 +5,7 @@ import { validateCode } from "@/lib/data/discounts";
 import { createReview } from "@/lib/data/reviews";
 import { getProductBySlug } from "@/lib/data/products";
 import { getSettings } from "@/lib/data/settings";
+import { getCurrentCustomer } from "@/lib/customerSession";
 import { GOUVERNORATS } from "@/lib/tunisia";
 import { clientErrorMessage } from "@/lib/errors";
 import type { NewOrderInput, NewReviewInput } from "@/lib/types";
@@ -103,6 +104,9 @@ export async function placeOrder(input: NewOrderInput): Promise<PlaceOrderResult
       }));
     if (!items.length) return { ok: false, error: "Votre panier est vide." };
 
+    // Rattache la commande au compte connecté (côté serveur, jamais via le client).
+    const customer = await getCurrentCustomer();
+
     const order = await createOrder({
       ...input,
       customer_name: name,
@@ -111,6 +115,7 @@ export async function placeOrder(input: NewOrderInput): Promise<PlaceOrderResult
       address: address.slice(0, 300),
       notes: input.notes ? String(input.notes).slice(0, 1000) : undefined,
       source: input.source ? String(input.source).slice(0, 120) : undefined,
+      customer_id: customer?.id ?? null,
       items,
     });
     return { ok: true, orderNumber: order.order_number };

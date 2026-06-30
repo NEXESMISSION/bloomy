@@ -19,14 +19,14 @@ function clientDiscount(applied: Applied | null, subtotal: number): number {
   return Math.min(Math.round(raw * 1000) / 1000, subtotal);
 }
 
-export default function CheckoutForm() {
+export default function CheckoutForm({ customer }: { customer?: { name: string; phone: string } | null }) {
   const { items, subtotal, deliveryFee, setQty, remove } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
-    customer_name: "",
-    phone: "",
+    customer_name: customer?.name ?? "",
+    phone: customer?.phone ?? "",
     governorate: "",
     address: "",
   });
@@ -103,6 +103,17 @@ export default function CheckoutForm() {
       <div className="grid gap-8 lg:grid-cols-[1.25fr_1fr]">
         {/* Formulaire */}
         <form onSubmit={submit} className="order-2 space-y-4 lg:order-1">
+          {customer ? (
+            <div className="rounded-xl border border-line bg-sand px-4 py-3 text-sm text-ink">
+              Connecté en tant que <strong>{customer.name}</strong> — cette commande sera enregistrée dans
+              <Link href="/compte" className="font-semibold underline underline-offset-2"> votre compte</Link>.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-line bg-sand px-4 py-3 text-sm text-muted">
+              <Link href="/compte" className="font-semibold text-ink underline underline-offset-2">Créez un compte</Link>{" "}
+              (ou connectez-vous) pour suivre vos commandes et garder vos gains de la roue de la chance.
+            </div>
+          )}
           <h2 className="text-lg font-semibold text-ink">Vos coordonnées</h2>
           <div>
             <label className="mb-1.5 block text-sm text-muted">Nom complet</label>

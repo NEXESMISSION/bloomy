@@ -54,6 +54,7 @@ export type Order = {
   delivery_fee: number;
   total: number;
   source: string | null;
+  customer_id: string | null;
   items: OrderItem[];
 };
 
@@ -66,6 +67,7 @@ export type NewOrderInput = {
   notes?: string;
   code?: string;
   source?: string;
+  customer_id?: string | null; // défini côté serveur (client connecté), jamais par le navigateur
   items: { product_id: string | null; name: string; unit_price: number; quantity: number }[];
 };
 

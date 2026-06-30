@@ -150,6 +150,18 @@ export async function listWins(): Promise<RouletteWin[]> {
   return (data ?? []).map(mapWin);
 }
 
+/** Gains rattachés à un compte client (pour l'espace « Mon compte »). */
+export async function listWinsByCustomer(customerId: string): Promise<RouletteWin[]> {
+  const db = supabaseAdmin();
+  if (!db) return (await localGetWins()).filter((w) => w.customer_id === customerId);
+  const { data } = await db
+    .from("roulette_wins")
+    .select("*")
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false });
+  return (data ?? []).map(mapWin);
+}
+
 /* ─────────────── admin ─────────────── */
 
 export type PrizeInput = Omit<RoulettePrize, "id" | "created_at"> & { id?: string };

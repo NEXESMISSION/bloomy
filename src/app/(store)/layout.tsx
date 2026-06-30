@@ -25,7 +25,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         <SourceTracker />
       </Suspense>
       <div className="flex min-h-screen flex-col bg-white">
-        <Navbar announcement={settings.announcement} />
+        <Navbar announcement={settings.announcement} customerName={customer?.name ?? null} />
         <main className="flex-1">{children}</main>
         <Footer settings={settings} />
         <CartDrawer />

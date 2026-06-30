@@ -4,12 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { Menu, ShoppingBag, X, User } from "lucide-react";
 import { useCart } from "@/context/cart";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-export default function Navbar({ announcement }: { announcement?: string }) {
+export default function Navbar({ announcement, customerName }: { announcement?: string; customerName?: string | null }) {
   const { count, open } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -66,19 +66,32 @@ export default function Navbar({ announcement }: { announcement?: string }) {
           />
         </Link>
 
-        {/* droite : panier */}
-        <button
-          onClick={open}
-          className="-mr-2 relative grid h-10 w-10 place-items-center rounded-full text-ink"
-          aria-label="Panier"
-        >
-          <ShoppingBag className="h-[19px] w-[19px]" />
-          {count > 0 && (
-            <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-white">
-              {count}
-            </span>
-          )}
-        </button>
+        {/* droite : compte + panier */}
+        <div className="-mr-2 flex items-center">
+          <Link
+            href="/compte"
+            className="relative grid h-10 w-10 place-items-center rounded-full text-ink"
+            aria-label="Mon compte"
+            title={customerName ? `Mon compte (${customerName})` : "Mon compte"}
+          >
+            <User className="h-[19px] w-[19px]" />
+            {customerName && (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-green-500 ring-2 ring-white" />
+            )}
+          </Link>
+          <button
+            onClick={open}
+            className="relative grid h-10 w-10 place-items-center rounded-full text-ink"
+            aria-label="Panier"
+          >
+            <ShoppingBag className="h-[19px] w-[19px]" />
+            {count > 0 && (
+              <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-white">
+                {count}
+              </span>
+            )}
+          </button>
+        </div>
       </nav>
 
       {/* menu mobile */}
@@ -94,6 +107,10 @@ export default function Navbar({ announcement }: { announcement?: string }) {
                 {item.label}
               </Link>
             ))}
+            <Link href="/compte" className="flex items-center gap-2 py-3 text-[15px] font-medium text-ink">
+              <User className="h-4 w-4" />
+              {customerName ? `Mon compte (${customerName.split(" ")[0]})` : "Mon compte / Connexion"}
+            </Link>
           </div>
         </div>
       )}

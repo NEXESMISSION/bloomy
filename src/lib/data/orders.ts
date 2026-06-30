@@ -25,6 +25,7 @@ function mapOrderRow(o: any): Omit<Order, "items"> {
     delivery_fee: Number(o.delivery_fee),
     total: Number(o.total),
     source: o.source ?? null,
+    customer_id: o.customer_id ?? null,
   };
 }
 
@@ -94,6 +95,7 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
     delivery_fee,
     total,
     source,
+    customer_id: input.customer_id ?? null,
   };
 
   const db = supabaseAdmin();
@@ -134,6 +136,27 @@ export async function getOrderByNumber(orderNumber: string): Promise<Order | nul
   if (!order) return null;
   const { data: items } = await db.from("order_items").select("*").eq("order_id", order.id);
   return { ...mapOrderRow(order), items: (items ?? []).map(mapItemRow) };
+}
+
+/** Commandes d'un client connecté : rattachées au compte OU passées avec le
+ *  même téléphone avant la création du compte. */
+export async function listOrdersByCustomer(customerId: string, phone?: string): Promise<Order[]> {
+  const db = supabaseAdmin();
+  if (!db) {
+    return (await localGetOrders())
+      .filter((o) => o.customer_id === customerId || (!!phone && o.phone === phone))
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  }
+  let query = db.from("orders").select("*");
+  query = phone ? query.or(`customer_id.eq.${customerId},phone.eq.${phone}`) : query.eq("customer_id", customerId);
+  const { data: orders } = await query.order("created_at", { ascending: false });
+  if (!orders?.length) return [];
+  const ids = orders.map((o: any) => o.id);
+  const { data: items } = await db.from("order_items").select("*").in("order_id", ids);
+  return orders.map((o: any) => ({
+    ...mapOrderRow(o),
+    items: (items ?? []).filter((it: any) => it.order_id === o.id).map(mapItemRow),
+  }));
 }
 
 /* ───────────────────────── ADMIN ───────────────────────── */
