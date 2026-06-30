@@ -70,7 +70,7 @@ export async function createStaffAction(input: { name: string; pin: string; role
   const me = await requireOwner();
   const s = await createStaff(input);
   await logActivity({ actorId: me.id, actorName: me.name, action: "Ajout d'un membre", entityType: "staff", entityId: s.id, detail: `${s.name} (${s.role})` });
-  revalidatePath("/admin/equipe");
+  revalidatePath("/crm/equipe");
   return s;
 }
 
@@ -78,14 +78,14 @@ export async function updateStaffAction(id: string, patch: { name?: string; role
   const me = await requireOwner();
   await updateStaff(id, patch);
   await logActivity({ actorId: me.id, actorName: me.name, action: "Modification d'un membre", entityType: "staff", entityId: id });
-  revalidatePath("/admin/equipe");
+  revalidatePath("/crm/equipe");
 }
 
 export async function deleteStaffAction(id: string) {
   const me = await requireOwner();
   await deleteStaff(id);
   await logActivity({ actorId: me.id, actorName: me.name, action: "Suppression d'un membre", entityType: "staff", entityId: id });
-  revalidatePath("/admin/equipe");
+  revalidatePath("/crm/equipe");
 }
 
 export async function setOrderStatus(id: string, status: OrderStatus) {

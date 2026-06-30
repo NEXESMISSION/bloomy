@@ -11,7 +11,7 @@ export default async function VentesPage() {
   const [sales, clients, products] = await Promise.all([listSales(), listClients(), getProducts()]);
 
   return (
-    <AdminShell>
+    <AdminShell variant="crm">
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Ventes</h1>
         <p className="mt-1 text-sm text-muted">

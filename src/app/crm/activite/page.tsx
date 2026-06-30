@@ -10,7 +10,7 @@ export default async function ActivitePage() {
   const items = me?.role === "owner" ? await listActivity(300) : [];
 
   return (
-    <AdminShell>
+    <AdminShell variant="crm">
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Activité</h1>
         <p className="mt-1 text-sm text-muted">Qui a fait quoi, et quand. Journal complet de l'équipe.</p>

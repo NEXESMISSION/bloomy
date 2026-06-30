@@ -12,7 +12,7 @@ export default async function StockPage() {
   const staffById = Object.fromEntries(staff.map((s) => [s.id, s.name]));
 
   return (
-    <AdminShell>
+    <AdminShell variant="crm">
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Stock & Réappro</h1>
         <p className="mt-1 text-sm text-muted">

@@ -11,7 +11,7 @@ export default async function EquipePage() {
   const staff = await listStaff();
 
   return (
-    <AdminShell>
+    <AdminShell variant="crm">
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Équipe</h1>
         <p className="mt-1 text-sm text-muted">
@@ -20,9 +20,7 @@ export default async function EquipePage() {
       </div>
 
       {!isSupabaseConfigured ? (
-        <div className="rounded-2xl border border-line bg-sand p-6 text-sm text-ink">
-          Cette fonctionnalité nécessite Supabase.
-        </div>
+        <div className="rounded-2xl border border-line bg-sand p-6 text-sm text-ink">Cette fonctionnalité nécessite Supabase.</div>
       ) : me?.role !== "owner" ? (
         <div className="rounded-2xl border border-line bg-sand p-6 text-sm text-ink">
           La gestion de l'équipe est réservée au propriétaire.

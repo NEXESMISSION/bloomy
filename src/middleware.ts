@@ -3,7 +3,9 @@ import { ADMIN_COOKIE, isValidSession } from "@/lib/auth";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  // Mêmes identifiants pour /admin (boutique) et /crm (gestion).
+  const protectedArea = (pathname.startsWith("/admin") && pathname !== "/admin/login") || pathname.startsWith("/crm");
+  if (protectedArea) {
     const ok = await isValidSession(req.cookies.get(ADMIN_COOKIE)?.value);
     if (!ok) {
       const url = req.nextUrl.clone();
@@ -16,5 +18,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/crm/:path*"],
 };
