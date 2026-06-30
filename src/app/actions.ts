@@ -8,14 +8,17 @@ import { getProductBySlug } from "@/lib/data/products";
 import { getSettings } from "@/lib/data/settings";
 import { getCurrentCustomer } from "@/lib/customerSession";
 import { normalizePhone } from "@/lib/customerAuth";
+import { notifyTelegram } from "@/lib/notify";
+import { formatTND } from "@/lib/utils";
 import { GOUVERNORATS } from "@/lib/tunisia";
 import { clientErrorMessage } from "@/lib/errors";
 import type { NewOrderInput, NewReviewInput } from "@/lib/types";
 
 export async function submitReview(
-  input: NewReviewInput,
+  input: NewReviewInput & { hp?: string },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
+    if (input.hp) return { ok: true }; // honeypot anti-bot
     const settings = await getSettings();
     if (!settings.reviews_enabled) return { ok: false, error: "Les avis sont désactivés." };
     if (!input.author_name?.trim() || input.author_name.trim().length < 2) {
@@ -49,8 +52,10 @@ export async function submitContactMessage(input: {
   phone: string;
   email?: string;
   message: string;
+  hp?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
+    if (input.hp) return { ok: true }; // honeypot : bot détecté → succès factice, rien enregistré
     const name = (input.name ?? "").trim();
     if (name.length < 2) return { ok: false, error: "Veuillez indiquer votre nom." };
     const phone = normalizePhone(input.phone ?? "");
@@ -58,6 +63,9 @@ export async function submitContactMessage(input: {
     const message = (input.message ?? "").trim();
     if (message.length < 5) return { ok: false, error: "Votre message est trop court." };
     await createContactMessage({ name, phone, email: input.email, message });
+    await notifyTelegram(
+      `✉️ <b>Nouveau message</b>\n${name} · ${phone}\n${message.slice(0, 300)}`,
+    );
     return { ok: true };
   } catch (e) {
     return { ok: false, error: clientErrorMessage(e) };
@@ -140,6 +148,14 @@ export async function placeOrder(input: NewOrderInput): Promise<PlaceOrderResult
       customer_id: customer?.id ?? null,
       items,
     });
+    const lines = order.items.map((i) => `• ${i.name} ×${i.quantity}`).join("\n");
+    await notifyTelegram(
+      `🛒 <b>Nouvelle commande</b> ${order.order_number}\n` +
+        `${order.customer_name} · ${order.phone}\n` +
+        `${order.governorate}${order.address ? " — " + order.address : ""}\n` +
+        `${lines}\n<b>Total : ${formatTND(order.total)}</b>` +
+        (order.discount_code ? `\nCode : ${order.discount_code}` : ""),
+    );
     return { ok: true, orderNumber: order.order_number };
   } catch (e) {
     return { ok: false, error: clientErrorMessage(e, "Une erreur est survenue. Réessayez.") };

@@ -10,6 +10,7 @@ import BottleShot from "@/components/ui/BottleShot";
 
 export default function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { add } = useCart();
+  const out = product.stock <= 0;
   const discount =
     product.compare_at_price && product.compare_at_price > product.price
       ? Math.round((1 - product.price / product.compare_at_price) * 100)
@@ -30,9 +31,14 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           sizes="(max-width:640px) 50vw, 25vw"
           className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.06]"
         />
-        {discount > 0 && (
+        {discount > 0 && !out && (
           <span className="absolute left-3 top-3 rounded-full bg-ink px-2.5 py-1 text-[11px] font-semibold text-white">
             −{discount}%
+          </span>
+        )}
+        {out && (
+          <span className="absolute left-3 top-3 rounded-full bg-muted/90 px-2.5 py-1 text-[11px] font-semibold text-white">
+            Épuisé
           </span>
         )}
       </Link>
@@ -46,9 +52,10 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
             <p className="truncate text-xs text-muted">{inspirationOf(product)}</p>
           </div>
           <button
-            onClick={() => add(product)}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white transition hover:scale-105 hover:bg-ink-80 active:scale-95"
-            aria-label={`Ajouter ${product.name}`}
+            onClick={() => !out && add(product)}
+            disabled={out}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white transition hover:scale-105 hover:bg-ink-80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+            aria-label={out ? `${product.name} épuisé` : `Ajouter ${product.name}`}
           >
             <Plus className="h-[18px] w-[18px]" />
           </button>

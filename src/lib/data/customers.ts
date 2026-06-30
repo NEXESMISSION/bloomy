@@ -115,3 +115,20 @@ export async function deleteCustomer(id: string): Promise<void> {
   const { error } = await db.from("customers").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
+
+/** Réinitialise le mot de passe d'un client (super admin) — pas d'email requis. */
+export async function setCustomerPassword(id: string, newPassword: string): Promise<void> {
+  const db = supabaseAdmin();
+  if (!db) {
+    return withStoreLock(async () => {
+      const all = await localGetCustomers();
+      const idx = all.findIndex((c) => c.id === id);
+      if (idx >= 0) {
+        all[idx].password_hash = hashPassword(newPassword);
+        await localSaveCustomers(all);
+      }
+    });
+  }
+  const { error } = await db.from("customers").update({ password_hash: hashPassword(newPassword) }).eq("id", id);
+  if (error) throw new Error(error.message);
+}

@@ -6,6 +6,7 @@ import { formatTND } from "@/lib/utils";
 import { telHref } from "@/lib/phone";
 import SuccessCheck from "@/components/SuccessCheck";
 import ClearCart from "@/components/ClearCart";
+import PixelPurchase from "@/components/PixelPurchase";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function ConfirmationPage({ params }: { params: { orderNumb
   return (
     <div className="container-bloomy py-12 sm:py-16">
       <ClearCart />
+      <PixelPurchase value={order.total} orderNumber={order.order_number} />
       <div className="mx-auto max-w-xl text-center">
         <div className="flex justify-center"><SuccessCheck /></div>
         <h1 className="mt-6 text-3xl sm:text-4xl">Merci, c'est noté !</h1>

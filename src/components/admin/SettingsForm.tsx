@@ -78,6 +78,44 @@ export default function SettingsForm({ settings }: { settings: ShopSettings }) {
       </div>
 
       <div className="rounded-2xl border border-line bg-white p-6">
+        <h2 className="mb-4 font-semibold text-ink">Notifications Telegram</h2>
+        <p className="mb-4 text-xs text-muted">
+          Recevez une alerte Telegram à chaque commande &amp; message. 1) Sur Telegram, écrivez à
+          <strong> @BotFather</strong> → <code>/newbot</code> pour créer un bot et copier son <em>token</em>.
+          2) Écrivez à <strong>@userinfobot</strong> pour obtenir votre <em>chat id</em>. 3) Démarrez une
+          conversation avec votre bot. Laissez vide pour désactiver.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Bot token</span>
+            <input className="input" value={form.telegram_token} onChange={(e) => set({ telegram_token: e.target.value })} placeholder="123456:ABC-..." />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Chat ID</span>
+            <input className="input" inputMode="numeric" value={form.telegram_chat} onChange={(e) => set({ telegram_chat: e.target.value })} placeholder="123456789" />
+          </label>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-6">
+        <h2 className="mb-4 font-semibold text-ink">Pixels publicitaires</h2>
+        <p className="mb-4 text-xs text-muted">
+          Pour mesurer vos pubs Instagram/Facebook &amp; TikTok et faire du reciblage. Collez l'identifiant du
+          pixel (laisser vide = désactivé). L'événement « achat » est envoyé automatiquement à la confirmation de commande.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">Meta (Facebook) Pixel ID</span>
+            <input className="input" inputMode="numeric" value={form.fb_pixel} onChange={(e) => set({ fb_pixel: e.target.value })} placeholder="1234567890" />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted">TikTok Pixel ID</span>
+            <input className="input" value={form.tiktok_pixel} onChange={(e) => set({ tiktok_pixel: e.target.value })} placeholder="CXXXXXXXXXXXXXXXXX" />
+          </label>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-6">
         <h2 className="mb-4 font-semibold text-ink">Bandeau d'annonce</h2>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-muted">Texte affiché en haut du site (vide = masqué)</span>

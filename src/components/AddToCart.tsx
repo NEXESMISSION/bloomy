@@ -19,10 +19,20 @@ export default function AddToCart({
   const router = useRouter();
   const [qty, setQty] = useState(1);
 
+  const out = product.stock <= 0;
+
   const buyNow = () => {
     add(product, qty);
     router.push("/commander");
   };
+
+  if (out) {
+    return (
+      <button disabled className="btn-outline w-full cursor-not-allowed opacity-60">
+        Rupture de stock
+      </button>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

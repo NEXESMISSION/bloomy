@@ -2,9 +2,9 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Trash2, Phone, Mail, ShoppingBag, Gift } from "lucide-react";
+import { Search, Trash2, Phone, Mail, ShoppingBag, Gift, KeyRound } from "lucide-react";
 import type { CustomerWithStats } from "@/lib/data/customers";
-import { deleteCustomerAction } from "@/app/admin/super-actions";
+import { deleteCustomerAction, resetCustomerPasswordAction } from "@/app/admin/super-actions";
 import { formatDateFR, cn } from "@/lib/utils";
 import { phoneDisplay } from "@/lib/phone";
 
@@ -30,6 +30,18 @@ export default function CustomersAdmin({ customers }: { customers: CustomerWithS
       try {
         await deleteCustomerAction(c.id, c.name);
         router.refresh();
+      } catch (e: any) {
+        alert(e?.message ?? "Erreur");
+      }
+    });
+  };
+
+  const resetPw = (c: CustomerWithStats) => {
+    if (!confirm(`Réinitialiser le mot de passe de ${c.name} ? Un nouveau mot de passe temporaire sera généré.`)) return;
+    startTransition(async () => {
+      try {
+        const res = await resetCustomerPasswordAction(c.id, c.name);
+        alert(`Nouveau mot de passe de ${c.name} :\n\n${res.password}\n\nCommuniquez-le au client (il pourra le changer plus tard).`);
       } catch (e: any) {
         alert(e?.message ?? "Erreur");
       }
@@ -71,6 +83,14 @@ export default function CustomersAdmin({ customers }: { customers: CustomerWithS
                 <Gift className="h-3 w-3" /> {c.wins_count}
               </span>
               <span className="hidden text-xs text-muted sm:block">Inscrit {c.created_at ? formatDateFR(c.created_at) : "—"}</span>
+              <button
+                onClick={() => resetPw(c)}
+                disabled={pending}
+                className={cn("grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition hover:text-ink", pending && "opacity-50")}
+                title="Réinitialiser le mot de passe"
+              >
+                <KeyRound className="h-4 w-4" />
+              </button>
               <button
                 onClick={() => del(c)}
                 disabled={pending}

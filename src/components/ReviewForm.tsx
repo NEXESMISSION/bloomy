@@ -16,6 +16,7 @@ export default function ReviewForm({
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
+  const [hp, setHp] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export default function ReviewForm({
       author_name: name,
       rating,
       comment,
+      hp,
     });
     setLoading(false);
     if (res.ok) {
@@ -53,6 +55,7 @@ export default function ReviewForm({
 
   return (
     <form onSubmit={submit} className="rounded-2xl border border-line bg-paper p-5">
+      <input type="text" name="company" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} className="hidden" />
       <p className="font-semibold text-ink">Laisser un avis</p>
 
       <div className="mt-3 flex items-center gap-1">

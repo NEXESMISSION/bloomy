@@ -95,6 +95,10 @@ export type ShopSettings = {
   shop_email: string; // email de contact
   shop_instagram: string; // URL Instagram (vide = masqué)
   shop_facebook: string; // URL Facebook (vide = masqué)
+  telegram_token: string; // bot token Telegram (notifications) — vide = désactivé
+  telegram_chat: string; // chat id Telegram destinataire
+  fb_pixel: string; // ID Meta/Facebook Pixel (vide = masqué)
+  tiktok_pixel: string; // ID TikTok Pixel (vide = masqué)
   announcement: string;
   reviews_enabled: boolean;
   roulette_enabled: boolean;

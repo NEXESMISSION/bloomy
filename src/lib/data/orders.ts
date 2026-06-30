@@ -46,6 +46,7 @@ async function priceItems(input: NewOrderInput["items"]): Promise<OrderItem[]> {
     if (it.product_id) {
       const product = await getProductById(it.product_id);
       if (!product || !product.is_active) throw new UserError(`Produit indisponible : ${it.name}`);
+      if (product.stock <= 0) throw new UserError(`Rupture de stock : ${product.name}`);
       out.push({ product_id: product.id, name: product.name, unit_price: product.price, quantity });
     } else {
       out.push({ product_id: null, name: it.name, unit_price: Number(it.unit_price) || 0, quantity });
@@ -120,6 +121,11 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
   const { error: itemsErr } = await db.from("order_items").insert(itemRows);
   if (itemsErr) throw new Error(itemsErr.message);
 
+  // Décrémente le stock (ATOMIQUE) pour chaque produit du catalogue commandé.
+  for (const it of items) {
+    if (it.product_id) await db.rpc("adjust_stock", { p_id: it.product_id, p_delta: -Math.abs(it.quantity) });
+  }
+
   return { ...mapOrderRow(orderRow), items };
 }
 
@@ -188,8 +194,18 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
       }
     });
   }
+  const { data: cur } = await db.from("orders").select("status").eq("id", id).maybeSingle();
+  const oldStatus = cur?.status;
   const { error } = await db.from("orders").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
+  // Annuler restaure le stock ; ré-activer une commande annulée le re-décrémente.
+  if (oldStatus && oldStatus !== status && (status === "annulee" || oldStatus === "annulee")) {
+    const sign = status === "annulee" ? 1 : -1;
+    const { data: its } = await db.from("order_items").select("product_id,quantity").eq("order_id", id);
+    for (const it of its ?? []) {
+      if (it.product_id) await db.rpc("adjust_stock", { p_id: it.product_id, p_delta: sign * Math.abs(Number(it.quantity)) });
+    }
+  }
 }
 
 export async function deleteOrder(id: string): Promise<void> {
@@ -198,6 +214,14 @@ export async function deleteOrder(id: string): Promise<void> {
     return withStoreLock(async () => {
       await localSaveOrders((await localGetOrders()).filter((o) => o.id !== id));
     });
+  }
+  // Restaure le stock (sauf si déjà annulée : son stock a déjà été restauré).
+  const { data: cur } = await db.from("orders").select("status").eq("id", id).maybeSingle();
+  if (cur && cur.status !== "annulee") {
+    const { data: its } = await db.from("order_items").select("product_id,quantity").eq("order_id", id);
+    for (const it of its ?? []) {
+      if (it.product_id) await db.rpc("adjust_stock", { p_id: it.product_id, p_delta: Math.abs(Number(it.quantity)) });
+    }
   }
   await db.from("order_items").delete().eq("order_id", id);
   const { error } = await db.from("orders").delete().eq("id", id);

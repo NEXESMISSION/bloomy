@@ -42,6 +42,9 @@ export default function Footer({ settings }: { settings: ShopSettings }) {
           links={[
             { label: "À propos", href: "/a-propos" },
             { label: "Contact", href: "/contact" },
+            { label: "Livraison & retours", href: "/livraison-retours" },
+            { label: "Confidentialité", href: "/confidentialite" },
+            { label: "CGV", href: "/cgv" },
           ]}
         />
 
