@@ -135,7 +135,7 @@ export default function Hero({ banners }: { banners: Banner[] }) {
   const slide = slides[Math.min(index, slides.length - 1)];
 
   return (
-    <section className="container-bloomy pt-6 sm:pt-10">
+    <section className="container-bloomy pb-8 pt-6 sm:pb-12 sm:pt-10">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
