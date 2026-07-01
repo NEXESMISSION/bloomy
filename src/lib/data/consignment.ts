@@ -150,17 +150,34 @@ function mapShop(r: any): CShop {
   };
 }
 
-export type ShopWithPlacement = CShop & { placement: Placement | null };
+export type ShopWithPlacement = CShop & { placement: Placement | null; last_visit: string | null };
 
 export async function listShops(): Promise<ShopWithPlacement[]> {
   const db = supabaseAdmin();
   if (!db) return [];
   const { data: shops } = await db.from("consignment_shops").select("*").order("created_at", { ascending: false });
+  // Dernière visite par boutique (une seule requête).
+  const { data: visits } = await db.from("consignment_visits").select("shop_id, created_at").order("created_at", { ascending: false });
+  const lastByShop = new Map<string, string>();
+  for (const v of visits ?? []) {
+    if (v.shop_id && !lastByShop.has(v.shop_id)) lastByShop.set(v.shop_id, v.created_at);
+  }
   const out: ShopWithPlacement[] = [];
   for (const s of shops ?? []) {
-    out.push({ ...mapShop(s), placement: await getActivePlacement(s.id) });
+    out.push({ ...mapShop(s), placement: await getActivePlacement(s.id), last_visit: lastByShop.get(s.id) ?? null });
   }
   return out;
+}
+
+/** Ajout rapide de plusieurs boutiques (une par ligne). */
+export async function bulkCreateShops(names: string[]): Promise<number> {
+  const db = supabaseAdmin();
+  if (!db) throw new UserError("Supabase requis.");
+  const rows = names.map((n) => n.trim()).filter(Boolean).slice(0, 200).map((name) => ({ name, status: "active" }));
+  if (!rows.length) return 0;
+  const { data, error } = await db.from("consignment_shops").insert(rows).select("id");
+  if (error) throw new Error(error.message);
+  return data?.length ?? 0;
 }
 
 export async function getShop(id: string): Promise<CShop | null> {
@@ -475,6 +492,82 @@ export type ConsignmentDashboard = {
   worst: { name: string; sold: number } | null;
   lowStock: { name: string; warehouse_stock: number }[];
 };
+
+/* ═══════════════════════════ Rapports (analytics) ═══════════════════════════ */
+
+export type ScentReport = { name: string; sold: number; revenue: number; commission: number };
+export type ShopReport = { id: string; name: string; governorate: string | null; sold: number; commission: number; collected: number; visits: number; last_visit: string | null };
+export type GovReport = { governorate: string; sold: number; revenue: number };
+export type ConsignmentReports = {
+  scents: ScentReport[];
+  shops: ShopReport[];
+  govs: GovReport[];
+  totalSold: number;
+  totalRevenue: number;
+  totalCommission: number;
+  totalCollected: number;
+};
+
+export async function getConsignmentReports(): Promise<ConsignmentReports> {
+  const empty: ConsignmentReports = { scents: [], shops: [], govs: [], totalSold: 0, totalRevenue: 0, totalCommission: 0, totalCollected: 0 };
+  const db = supabaseAdmin();
+  if (!db) return empty;
+  const [{ data: visits }, { data: items }, { data: prods }, { data: shops }] = await Promise.all([
+    db.from("consignment_visits").select("id, shop_id, total_sold, revenue, commission_total, amount_collected, created_at"),
+    db.from("consignment_visit_items").select("product_id, sold"),
+    db.from("consignment_products").select("id, name, selling_price, commission_per_sale"),
+    db.from("consignment_shops").select("id, name, governorate"),
+  ]);
+
+  const prod = new Map((prods ?? []).map((p: any) => [p.id, p]));
+  const shopInfo = new Map((shops ?? []).map((s: any) => [s.id, s]));
+
+  // Par parfum
+  const scentMap = new Map<string, ScentReport>();
+  for (const it of items ?? []) {
+    const p = prod.get(it.product_id);
+    if (!p) continue;
+    const cur = scentMap.get(it.product_id) ?? { name: p.name, sold: 0, revenue: 0, commission: 0 };
+    cur.sold += Number(it.sold);
+    cur.revenue += Number(it.sold) * Number(p.selling_price ?? 0);
+    cur.commission += Number(it.sold) * Number(p.commission_per_sale ?? 0);
+    scentMap.set(it.product_id, cur);
+  }
+
+  // Par boutique + par gouvernorat
+  const shopMap = new Map<string, ShopReport>();
+  const govMap = new Map<string, GovReport>();
+  let totalSold = 0, totalRevenue = 0, totalCommission = 0, totalCollected = 0;
+  for (const v of visits ?? []) {
+    totalSold += Number(v.total_sold);
+    totalRevenue += Number(v.revenue);
+    totalCommission += Number(v.commission_total);
+    totalCollected += Number(v.amount_collected);
+    const si = shopInfo.get(v.shop_id);
+    if (v.shop_id) {
+      const cur = shopMap.get(v.shop_id) ?? { id: v.shop_id, name: si?.name ?? "—", governorate: si?.governorate ?? null, sold: 0, commission: 0, collected: 0, visits: 0, last_visit: null };
+      cur.sold += Number(v.total_sold);
+      cur.commission += Number(v.commission_total);
+      cur.collected += Number(v.amount_collected);
+      cur.visits += 1;
+      if (!cur.last_visit || v.created_at > cur.last_visit) cur.last_visit = v.created_at;
+      shopMap.set(v.shop_id, cur);
+    }
+    const gov = (si?.governorate || "").trim() || "Autre";
+    const g = govMap.get(gov) ?? { governorate: gov, sold: 0, revenue: 0 };
+    g.sold += Number(v.total_sold);
+    g.revenue += Number(v.revenue);
+    govMap.set(gov, g);
+  }
+
+  const round = (n: number) => Math.round(n * 1000) / 1000;
+  return {
+    scents: Array.from(scentMap.values()).map((s) => ({ ...s, revenue: round(s.revenue), commission: round(s.commission) })).sort((a, b) => b.sold - a.sold),
+    shops: Array.from(shopMap.values()).map((s) => ({ ...s, commission: round(s.commission), collected: round(s.collected) })).sort((a, b) => b.sold - a.sold),
+    govs: Array.from(govMap.values()).map((g) => ({ ...g, revenue: round(g.revenue) })).sort((a, b) => b.sold - a.sold),
+    totalSold, totalRevenue: round(totalRevenue), totalCommission: round(totalCommission), totalCollected: round(totalCollected),
+  };
+}
 
 export async function getConsignmentDashboard(): Promise<ConsignmentDashboard> {
   const db = supabaseAdmin();

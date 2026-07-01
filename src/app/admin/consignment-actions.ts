@@ -6,7 +6,7 @@ import { logActivity } from "@/lib/data/activity";
 import { clientErrorMessage } from "@/lib/errors";
 import {
   upsertConsignmentProduct, deleteConsignmentProduct, addWarehouseStock, type CProductInput,
-  upsertShop, setShopStatus, type ShopInput, type ShopStatus,
+  upsertShop, setShopStatus, bulkCreateShops, type ShopInput, type ShopStatus,
   createDisplay, deleteDisplay,
   createPlacement, removePlacement,
   recordVisit, type VisitInput,
@@ -60,6 +60,18 @@ export async function saveShopAction(input: ShopInput) {
     await logActivity({ actorId: me.id, actorName: me.name, action: input.id ? "Boutique modifiée" : "Boutique ajoutée", entityType: "c_shop", entityId: s.id, detail: s.name });
     refreshAll();
     return { ok: true as const, shop: s };
+  } catch (e) {
+    return { ok: false as const, error: clientErrorMessage(e) };
+  }
+}
+
+export async function bulkAddShopsAction(names: string[]) {
+  const { me } = await actor();
+  try {
+    const n = await bulkCreateShops(names);
+    await logActivity({ actorId: me.id, actorName: me.name, action: "Ajout rapide boutiques", entityType: "c_shop", detail: `${n} boutiques` });
+    refreshAll();
+    return { ok: true as const, count: n };
   } catch (e) {
     return { ok: false as const, error: clientErrorMessage(e) };
   }

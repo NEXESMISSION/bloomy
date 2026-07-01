@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Store, Boxes, PackageCheck } from "lucide-react";
+import { LayoutDashboard, Store, Boxes, PackageCheck, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Tableau", href: "/crm/depot", icon: LayoutDashboard, exact: true },
   { label: "Boutiques", href: "/crm/depot/boutiques", icon: Store },
+  { label: "Rapports", href: "/crm/depot/rapports", icon: BarChart3 },
   { label: "Displays", href: "/crm/depot/displays", icon: Boxes },
   { label: "Produits", href: "/crm/depot/produits", icon: PackageCheck },
 ];

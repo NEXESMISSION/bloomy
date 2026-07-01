@@ -1,12 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, Pencil, X, Phone, MapPin, ArrowRight } from "lucide-react";
+import { Plus, Loader2, Pencil, X, Phone, MapPin, ArrowRight, Search, ListPlus } from "lucide-react";
 import type { ShopWithPlacement, ShopInput, ShopStatus } from "@/lib/data/consignment";
-import { saveShopAction, setShopStatusAction } from "@/app/admin/consignment-actions";
+import { saveShopAction, setShopStatusAction, bulkAddShopsAction } from "@/app/admin/consignment-actions";
 import { cn } from "@/lib/utils";
+
+function isDue(last: string | null): boolean {
+  if (!last) return true;
+  return Date.now() - new Date(last).getTime() >= 7 * 86400000;
+}
 
 const STATUS: Record<ShopStatus, { label: string; cls: string }> = {
   active: { label: "Active", cls: "bg-green-100 text-green-700" },
@@ -21,21 +26,35 @@ export default function ConsignmentShopsAdmin({ shops }: { shops: ShopWithPlacem
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState<Form | null>(null);
+  const [bulk, setBulk] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+
+  const list = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return shops
+      .filter((s) => !query || `${s.name} ${s.governorate ?? ""} ${s.location ?? ""} ${s.owner_name ?? ""}`.toLowerCase().includes(query))
+      .sort((a, b) => (a.last_visit ? new Date(a.last_visit).getTime() : 0) - (b.last_visit ? new Date(b.last_visit).getTime() : 0));
+  }, [shops, q]);
 
   const cycle = (s: ShopWithPlacement) =>
     startTransition(async () => { await setShopStatusAction(s.id, NEXT[s.status]); router.refresh(); });
 
   return (
     <div>
-      <div className="mb-5 flex justify-end">
-        <button onClick={() => setEditing({ name: "", status: "active" })} className="btn-primary"><Plus className="h-4 w-4" /> Nouvelle boutique</button>
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Chercher une boutique…" className="input py-2.5 pl-10" />
+        </div>
+        <button onClick={() => setBulk("")} className="btn-outline shrink-0"><ListPlus className="h-4 w-4" /> Ajout rapide</button>
+        <button onClick={() => setEditing({ name: "", status: "active" })} className="btn-primary shrink-0"><Plus className="h-4 w-4" /> Nouvelle boutique</button>
       </div>
 
       {shops.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center text-sm text-muted">Aucune boutique. Ajoutez votre premier point de vente.</div>
+        <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center text-sm text-muted">Aucune boutique. Ajoutez votre premier point de vente, ou utilisez « Ajout rapide » pour en créer plusieurs d'un coup.</div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {shops.map((s) => {
+          {list.map((s) => {
             const st = STATUS[s.status];
             const pl = s.placement;
             return (
@@ -45,7 +64,10 @@ export default function ConsignmentShopsAdmin({ shops }: { shops: ShopWithPlacem
                     <p className="truncate font-semibold text-ink">{s.name}</p>
                     {s.owner_name && <p className="truncate text-xs text-muted">{s.owner_name}</p>}
                   </div>
-                  <button onClick={() => cycle(s)} disabled={pending} className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", st.cls)}>{st.label}</button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {s.status !== "removed" && isDue(s.last_visit) && <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold text-white">À visiter</span>}
+                    <button onClick={() => cycle(s)} disabled={pending} className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", st.cls)}>{st.label}</button>
+                  </div>
                 </div>
                 <div className="mt-2 space-y-1 text-sm text-muted">
                   {s.phone && <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> {s.phone}</p>}
@@ -81,6 +103,44 @@ export default function ConsignmentShopsAdmin({ shops }: { shops: ShopWithPlacem
           })}
         />
       )}
+
+      {bulk !== null && (
+        <BulkModal
+          pending={pending}
+          onClose={() => setBulk(null)}
+          onSave={(text) => startTransition(async () => {
+            const names = text.split("\n").map((x) => x.trim()).filter(Boolean);
+            if (!names.length) { setBulk(null); return; }
+            const res = await bulkAddShopsAction(names);
+            if (res.ok) { setBulk(null); router.refresh(); } else alert(res.error);
+          })}
+        />
+      )}
+    </div>
+  );
+}
+
+function BulkModal({ pending, onClose, onSave }: { pending: boolean; onClose: () => void; onSave: (text: string) => void }) {
+  const [text, setText] = useState("");
+  const count = text.split("\n").map((x) => x.trim()).filter(Boolean).length;
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center p-4">
+      <div className="absolute inset-0 bg-ink/40" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-3xl border border-line bg-white p-6 shadow-pop">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-ink">Ajout rapide de boutiques</h2>
+          <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full border border-line text-muted hover:text-ink"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="mb-3 text-xs text-muted">Une boutique par ligne (juste le nom). Vous complétez les détails ensuite.</p>
+        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={7} className="input resize-none" placeholder={"Beauty Center Ariana\nParfumerie El Menzah\nBoutique Marsa\n…"} />
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <span className="text-sm text-muted">{count} boutique{count > 1 ? "s" : ""}</span>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="btn-outline">Annuler</button>
+            <button onClick={() => onSave(text)} disabled={pending || count === 0} className="btn-primary">{pending ? <Loader2 className="h-4 w-4 animate-spin" /> : `Ajouter ${count}`}</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
