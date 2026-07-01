@@ -28,7 +28,7 @@ type CartContextValue = {
   freeThreshold: number;
   total: number;
   isOpen: boolean;
-  add: (product: Product, quantity?: number) => void;
+  add: (product: Product, quantity?: number, options?: { openDrawer?: boolean }) => void;
   remove: (id: string) => void;
   setQty: (id: string, quantity: number) => void;
   clear: () => void;
@@ -68,7 +68,7 @@ export function CartProvider({
     }
   }, [items, hydrated]);
 
-  const add = useCallback((product: Product, quantity = 1) => {
+  const add = useCallback((product: Product, quantity = 1, options?: { openDrawer?: boolean }) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === product.id);
       if (existing) {
@@ -88,7 +88,7 @@ export function CartProvider({
         },
       ];
     });
-    setIsOpen(true);
+    if (options?.openDrawer !== false) setIsOpen(true);
   }, []);
 
   const remove = useCallback((id: string) => {

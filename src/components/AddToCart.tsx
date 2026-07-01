@@ -22,7 +22,7 @@ export default function AddToCart({
   const out = product.stock <= 0;
 
   const buyNow = () => {
-    add(product, qty);
+    add(product, qty, { openDrawer: false });
     router.push("/commander");
   };
 
