@@ -50,13 +50,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
   ];
 
   const imageUrl = product.image?.startsWith("http") ? product.image : `${site.url}${product.image}`;
-  const jsonLd = {
-    "@context": "https://schema.org/",
+  const productLd = {
     "@type": "Product",
     name: product.name,
     image: [imageUrl],
     description: product.description || product.tagline,
     brand: { "@type": "Brand", name: "Bloomy" },
+    category: product.family,
     offers: {
       "@type": "Offer",
       url: `${site.url}/produit/${product.slug}`,
@@ -67,6 +67,20 @@ export default async function ProductPage({ params }: { params: { slug: string }
     ...(stats.count > 0
       ? { aggregateRating: { "@type": "AggregateRating", ratingValue: stats.avg, reviewCount: stats.count } }
       : {}),
+  };
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      productLd,
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Accueil", item: `${site.url}/` },
+          { "@type": "ListItem", position: 2, name: "Boutique", item: `${site.url}/boutique` },
+          { "@type": "ListItem", position: 3, name: product.name, item: `${site.url}/produit/${product.slug}` },
+        ],
+      },
+    ],
   };
 
   return (

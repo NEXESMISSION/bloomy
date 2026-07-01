@@ -6,6 +6,7 @@ import SourceTracker from "@/components/SourceTracker";
 import RouletteWidget from "@/components/RouletteWidget";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import Pixels from "@/components/Pixels";
+import SiteJsonLd from "@/components/SiteJsonLd";
 import { CartProvider } from "@/context/cart";
 import { getSettings } from "@/lib/data/settings";
 import { getActivePrizes } from "@/lib/data/roulette";
@@ -34,6 +35,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       {settings.roulette_enabled && <RouletteWidget prizes={prizes} isLoggedIn={!!customer} />}
       <WhatsAppButton phone={settings.shop_phone} />
       <Pixels fb={settings.fb_pixel} tiktok={settings.tiktok_pixel} />
+      <SiteJsonLd settings={settings} />
     </CartProvider>
   );
 }
