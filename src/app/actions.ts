@@ -41,6 +41,10 @@ export async function submitReview(
       rating: input.rating,
       comment: input.comment,
     });
+    await notifyTelegram(
+      `⭐ <b>Nouvel avis</b> ${"★".repeat(Math.max(1, Math.min(5, Math.round(input.rating))))} sur ${product.name}\n` +
+        `${input.author_name.trim()} : ${input.comment.trim().slice(0, 300)}\n(à modérer dans l'admin → Avis)`,
+    );
     return { ok: true };
   } catch (e) {
     return { ok: false, error: clientErrorMessage(e) };
