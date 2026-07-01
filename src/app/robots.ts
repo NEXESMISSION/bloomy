@@ -22,7 +22,7 @@ const AI_BOTS = [
 
 export default function robots(): MetadataRoute.Robots {
   const base = site.url.replace(/\/$/, "");
-  const privatePaths = ["/admin", "/crm", "/commande/", "/compte"];
+  const privatePaths = ["/admin", "/commande/", "/compte"];
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: privatePaths },

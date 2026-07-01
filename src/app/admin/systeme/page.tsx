@@ -12,7 +12,7 @@ export default async function SystemePage() {
   const me = await getCurrentStaff();
 
   return (
-    <AdminShell variant="store">
+    <AdminShell>
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Super Admin</h1>
         <p className="mt-1 text-sm text-muted">Contrôle total : comptes équipe &amp; clients, et journal d'activité complet.</p>

@@ -7,27 +7,20 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
-  Users,
-  Receipt,
   Package,
-  Boxes,
   Tag,
   Star,
   Gift,
   Ticket,
   Images,
-  UserCog,
-  History,
   Settings,
   ExternalLink,
   LogOut,
   Menu,
   X,
   Briefcase,
-  Store,
   ShieldCheck,
   Mail,
-  Warehouse,
 } from "lucide-react";
 import { logout, whoami } from "@/app/admin/actions";
 import { cn } from "@/lib/utils";
@@ -47,16 +40,11 @@ const STORE_NAV = [
   { label: "Paramètres", href: "/admin/parametres", icon: Settings },
 ];
 
-const CRM_NAV = [
-  { label: "Clients & Boutiques", href: "/crm/clients", icon: Users },
-  { label: "Ventes", href: "/crm/ventes", icon: Receipt },
-  { label: "Stock & Réappro", href: "/crm/stock", icon: Boxes },
-  { label: "Dépôt-vente", href: "/crm/depot", icon: Warehouse },
-  { label: "Équipe", href: "/crm/equipe", icon: UserCog },
-  { label: "Activité", href: "/crm/activite", icon: History },
-];
+// Le CRM (dépôt-vente + commerciaux) est désormais une application séparée.
+// On la lie ici si son URL est configurée (NEXT_PUBLIC_CRM_URL).
+const CRM_URL = process.env.NEXT_PUBLIC_CRM_URL;
 
-export default function AdminShell({ children, variant = "store" }: { children: React.ReactNode; variant?: "store" | "crm" }) {
+export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -66,12 +54,8 @@ export default function AdminShell({ children, variant = "store" }: { children: 
     whoami().then(setMe).catch(() => {});
   }, []);
 
-  const isCrm = variant === "crm";
-  const nav = isCrm ? CRM_NAV : STORE_NAV;
-  const home = isCrm ? "/crm/clients" : "/admin";
-  const cross = isCrm
-    ? { label: "Boutique en ligne", href: "/admin", icon: Store }
-    : { label: "Gestion (CRM)", href: "/crm/clients", icon: Briefcase };
+  const nav = STORE_NAV;
+  const home = "/admin";
 
   const doLogout = async () => {
     await logout();
@@ -83,7 +67,7 @@ export default function AdminShell({ children, variant = "store" }: { children: 
     <div className="flex h-full flex-col gap-2 p-4">
       <Link href={home} className="mb-4 flex items-center gap-2 px-2 py-2">
         <Image src="/brand/bloomy-wordmark-dark.png" alt="Bloomy" width={1163} height={533} className="h-5 w-auto" />
-        <span className="rounded-md bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">{isCrm ? "CRM" : "Admin"}</span>
+        <span className="rounded-md bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Admin</span>
       </Link>
 
       <nav className="flex flex-col gap-1">
@@ -133,9 +117,11 @@ export default function AdminShell({ children, variant = "store" }: { children: 
             </span>
           </div>
         )}
-        <Link href={cross.href} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-ink shadow-sm transition hover:bg-sand">
-          <cross.icon className="h-[18px] w-[18px]" /> {cross.label}
-        </Link>
+        {CRM_URL && (
+          <a href={CRM_URL} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-ink shadow-sm transition hover:bg-sand">
+            <Briefcase className="h-[18px] w-[18px]" /> CRM Dépôt-vente
+          </a>
+        )}
         <a href="/" target="_blank" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted transition hover:bg-white hover:text-ink">
           <ExternalLink className="h-[18px] w-[18px]" /> Voir le site
         </a>
@@ -166,7 +152,7 @@ export default function AdminShell({ children, variant = "store" }: { children: 
           </button>
           <span className="flex items-center gap-2">
             <Image src="/brand/bloomy-wordmark-dark.png" alt="Bloomy" width={1163} height={533} className="h-5 w-auto" />
-            <span className="rounded bg-ink px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">{isCrm ? "CRM" : "Admin"}</span>
+            <span className="rounded bg-ink px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">Admin</span>
           </span>
           <div className="w-10" />
         </header>
