@@ -7,6 +7,7 @@ import RouletteWidget from "@/components/RouletteWidget";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import Pixels from "@/components/Pixels";
 import SiteJsonLd from "@/components/SiteJsonLd";
+import BackButton from "@/components/BackButton";
 import { CartProvider } from "@/context/cart";
 import { getSettings } from "@/lib/data/settings";
 import { getActivePrizes } from "@/lib/data/roulette";
@@ -28,6 +29,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       </Suspense>
       <div className="flex min-h-screen flex-col bg-white">
         <Navbar announcement={settings.announcement} customerName={customer?.name ?? null} />
+        <BackButton />
         <main className="flex-1">{children}</main>
         <Footer settings={settings} />
         <CartDrawer />
