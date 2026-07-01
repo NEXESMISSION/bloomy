@@ -41,6 +41,11 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
             Épuisé
           </span>
         )}
+        {product.is_pack && (
+          <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-white">
+            Pack{product.pack_size ? ` ×${product.pack_size}` : ""}
+          </span>
+        )}
       </Link>
 
       <div className="mt-3">

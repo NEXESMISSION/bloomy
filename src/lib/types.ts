@@ -9,6 +9,11 @@ export type Product = {
   size_ml: number;
   accent: string; // couleur d'accent (hex) pour les effets de carte
   family: string; // famille olfactive
+  gender: string; // homme | femme | mixte
+  season: string; // ete | hiver | toutes
+  product_type: string | null; // libellé libre (Français, Oriental…)
+  is_pack: boolean; // vrai = produit "pack" (offre multi-flacons)
+  pack_size: number | null; // nb de flacons si pack
   notes_top: string[];
   notes_heart: string[];
   notes_base: string[];

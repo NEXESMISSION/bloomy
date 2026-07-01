@@ -13,6 +13,7 @@ const BLANK: Product = {
   size_ml: 50, accent: "#17171B", family: "", notes_top: [], notes_heart: [], notes_base: [],
   moods: [], image: "/products/sauvage.png", gallery: [], is_featured: false, is_best_seller: false,
   is_active: true, stock: 0, sort_order: 0,
+  gender: "mixte", season: "toutes", product_type: null, is_pack: false, pack_size: null,
 };
 
 const IMAGE_OPTIONS = [
@@ -112,6 +113,31 @@ function ProductModal({ product, pending, onClose, onSave }: { product: Product;
           <L label="Accroche (tagline)" full><input className="input" value={form.tagline} onChange={(e) => set({ tagline: e.target.value })} /></L>
           <L label="Description" full><textarea rows={3} className="input resize-none" value={form.description} onChange={(e) => set({ description: e.target.value })} /></L>
           <L label="Famille olfactive"><input className="input" value={form.family} onChange={(e) => set({ family: e.target.value })} /></L>
+          <L label="Genre">
+            <select className="input" value={form.gender} onChange={(e) => set({ gender: e.target.value })}>
+              <option value="mixte">Mixte</option>
+              <option value="homme">Homme</option>
+              <option value="femme">Femme</option>
+            </select>
+          </L>
+          <L label="Saison">
+            <select className="input" value={form.season} onChange={(e) => set({ season: e.target.value })}>
+              <option value="toutes">Toutes saisons</option>
+              <option value="ete">Été</option>
+              <option value="hiver">Hiver</option>
+            </select>
+          </L>
+          <L label="Type / collection (libre)"><input className="input" value={form.product_type ?? ""} onChange={(e) => set({ product_type: e.target.value || null })} placeholder="Français, Oriental…" /></L>
+          <L label="Pack (offre multi-flacons) ?">
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => set({ is_pack: !form.is_pack })} className={cn("relative h-6 w-11 rounded-full transition", form.is_pack ? "bg-ink" : "bg-line")}>
+                <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", form.is_pack ? "left-[22px]" : "left-0.5")} />
+              </button>
+              {form.is_pack && (
+                <input type="number" min={2} className="input w-28" value={form.pack_size ?? ""} onChange={(e) => set({ pack_size: e.target.value ? Number(e.target.value) : null })} placeholder="Nb flacons" />
+              )}
+            </div>
+          </L>
           <L label="Image principale" full>
             <div className="flex items-start gap-3">
               <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-surface">
