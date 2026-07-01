@@ -2,13 +2,19 @@ import Link from "next/link";
 import { TrendingUp, Coins, Wallet, Package, Trophy, Store, MapPin } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import DepotTabs from "@/components/admin/DepotTabs";
-import { getConsignmentReports } from "@/lib/data/consignment";
+import VisitsCsvButton from "@/components/admin/VisitsCsvButton";
+import { getConsignmentReports, listVisits } from "@/lib/data/consignment";
 import { formatTND, cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function DepotRapportsPage() {
-  const r = await getConsignmentReports();
+  const [r, visits] = await Promise.all([getConsignmentReports(), listVisits(undefined, 2000)]);
+  const shopName = new Map(r.shops.map((s) => [s.id, s.name]));
+  const csvRows = visits.map((v) => ({
+    date: v.visited_at, shop: shopName.get(v.shop_id) ?? "—",
+    sold: v.total_sold, revenue: v.revenue, commission: v.commission_total, collected: v.amount_collected,
+  }));
   const hasData = r.totalSold > 0;
   const maxScent = Math.max(1, ...r.scents.map((s) => s.sold));
   const maxShop = Math.max(1, ...r.shops.map((s) => s.sold));
@@ -16,9 +22,12 @@ export default async function DepotRapportsPage() {
 
   return (
     <AdminShell variant="crm">
-      <div className="mb-7">
-        <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Rapports</h1>
-        <p className="mt-1 text-sm text-muted">Qu'est-ce qui se vend, quelles boutiques valent le coup, quelle ville performe.</p>
+      <div className="mb-7 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Rapports</h1>
+          <p className="mt-1 text-sm text-muted">Qu'est-ce qui se vend, quelles boutiques valent le coup, quelle ville performe.</p>
+        </div>
+        <VisitsCsvButton rows={csvRows} />
       </div>
       <DepotTabs />
 

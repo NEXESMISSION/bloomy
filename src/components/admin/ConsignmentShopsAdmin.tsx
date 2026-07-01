@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, Pencil, X, Phone, MapPin, ArrowRight, Search, ListPlus } from "lucide-react";
+import { Plus, Loader2, Pencil, X, Phone, MapPin, ArrowRight, Search, ListPlus, QrCode } from "lucide-react";
 import type { ShopWithPlacement, ShopInput, ShopStatus } from "@/lib/data/consignment";
 import { saveShopAction, setShopStatusAction, bulkAddShopsAction } from "@/app/admin/consignment-actions";
 import { cn } from "@/lib/utils";
@@ -46,6 +46,7 @@ export default function ConsignmentShopsAdmin({ shops }: { shops: ShopWithPlacem
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Chercher une boutique…" className="input py-2.5 pl-10" />
         </div>
+        <Link href="/crm/depot/qr" className="btn-outline shrink-0"><QrCode className="h-4 w-4" /> Imprimer QR</Link>
         <button onClick={() => setBulk("")} className="btn-outline shrink-0"><ListPlus className="h-4 w-4" /> Ajout rapide</button>
         <button onClick={() => setEditing({ name: "", status: "active" })} className="btn-primary shrink-0"><Plus className="h-4 w-4" /> Nouvelle boutique</button>
       </div>
