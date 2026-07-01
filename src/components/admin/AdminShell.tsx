@@ -27,6 +27,7 @@ import {
   Store,
   ShieldCheck,
   Mail,
+  Warehouse,
 } from "lucide-react";
 import { logout, whoami } from "@/app/admin/actions";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ const CRM_NAV = [
   { label: "Clients & Boutiques", href: "/crm/clients", icon: Users },
   { label: "Ventes", href: "/crm/ventes", icon: Receipt },
   { label: "Stock & Réappro", href: "/crm/stock", icon: Boxes },
+  { label: "Dépôt-vente", href: "/crm/depot", icon: Warehouse },
   { label: "Équipe", href: "/crm/equipe", icon: UserCog },
   { label: "Activité", href: "/crm/activite", icon: History },
 ];
