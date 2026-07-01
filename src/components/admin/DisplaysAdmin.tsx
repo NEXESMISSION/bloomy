@@ -37,7 +37,11 @@ export default function DisplaysAdmin({ displays, nextCode }: { displays: Displa
       </div>
 
       {displays.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center text-sm text-muted">Aucun display. Créez votre premier présentoir.</div>
+        <div className="rounded-2xl border border-dashed border-line bg-white p-8 text-center text-sm text-muted">
+          Rien à faire ici pour l'instant 👍<br />
+          Un code display (DISPLAY-001…) est créé <b>automatiquement</b> quand vous posez des flacons dans une boutique.
+          Cette page sert juste à voir où se trouve chaque boîte.
+        </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {displays.map((d) => {

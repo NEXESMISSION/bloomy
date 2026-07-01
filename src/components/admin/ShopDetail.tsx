@@ -94,13 +94,15 @@ function PlacePanel({ shop, availableDisplays, products }: { shop: CShop; availa
   return (
     <div className="rounded-2xl border border-line bg-white p-5">
       <h2 className="flex items-center gap-2 font-semibold text-ink"><PackagePlus className="h-5 w-5" /> Poser un display</h2>
-      <label className="mt-4 block">
-        <span className="mb-1 block text-xs font-medium text-muted">Boîte display (optionnel)</span>
-        <select className="input" value={displayId} onChange={(e) => setDisplayId(e.target.value)}>
-          <option value="">— Sans code display —</option>
-          {availableDisplays.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}
-        </select>
-      </label>
+      {availableDisplays.length > 0 && (
+        <label className="mt-4 block">
+          <span className="mb-1 block text-xs font-medium text-muted">Boîte display</span>
+          <select className="input" value={displayId} onChange={(e) => setDisplayId(e.target.value)}>
+            <option value="">Nouveau display (code auto)</option>
+            {availableDisplays.map((d) => <option key={d.id} value={d.id}>Réutiliser {d.code}</option>)}
+          </select>
+        </label>
+      )}
       <p className="mt-4 mb-2 text-xs font-medium text-muted">Combien de flacons par parfum ?</p>
       <div className="space-y-2">
         {products.map((p) => (

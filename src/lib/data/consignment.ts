@@ -297,9 +297,21 @@ export async function createPlacement(input: {
   const items = input.items.filter((i) => i.product_id && Number(i.qty) > 0);
   if (!items.length) throw new UserError("Ajoutez au moins un flacon au display.");
 
+  // Boîte display : on en crée une AUTOMATIQUEMENT si aucune n'est choisie, pour
+  // que l'utilisateur n'ait jamais à passer par l'onglet Displays. Chaque
+  // placement a donc toujours un code suivi (DISPLAY-00N).
+  let displayId = input.display_id;
+  if (displayId) {
+    await db.from("display_boxes").update({ status: "placed" }).eq("id", displayId);
+  } else {
+    const code = await nextDisplayCode();
+    const { data: box } = await db.from("display_boxes").insert({ code, status: "placed" }).select("id").single();
+    displayId = box?.id ?? null;
+  }
+
   const { data: placement, error } = await db
     .from("placements")
-    .insert({ shop_id: input.shop_id, display_id: input.display_id, status: "active" })
+    .insert({ shop_id: input.shop_id, display_id: displayId, status: "active" })
     .select("*")
     .single();
   if (error || !placement) throw new Error(error?.message ?? "Erreur placement.");
@@ -308,7 +320,6 @@ export async function createPlacement(input: {
     items.map((i) => ({ placement_id: placement.id, product_id: i.product_id, full_qty: Math.floor(i.qty), current_qty: Math.floor(i.qty) })),
   );
   for (const i of items) await decWarehouse(db, i.product_id, Math.floor(i.qty));
-  if (input.display_id) await db.from("display_boxes").update({ status: "placed" }).eq("id", input.display_id);
 }
 
 /** Retire un display d'une boutique (option : renvoyer les flacons restants à l'entrepôt). */
