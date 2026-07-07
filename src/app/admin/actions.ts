@@ -1,10 +1,11 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { optimizeToWebp } from "@/lib/image";
 import { ADMIN_COOKIE, createSessionToken } from "@/lib/auth";
-import { verifyOwnerCredentials } from "@/lib/data/adminAuth";
+import { verifyOwnerCredentials, verifyOwnerPin } from "@/lib/data/adminAuth";
+import { rateLimit } from "@/lib/rateLimit";
 import { requireAdmin } from "@/lib/session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { updateOrderStatus, deleteOrder } from "@/lib/data/orders";
@@ -48,9 +49,21 @@ export async function whoami(): Promise<{ name: string; role: "owner" | "staff";
 export async function login(
   email: string,
   password: string,
+  pin: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!(await verifyOwnerCredentials(email, password))) {
-    return { ok: false, error: "Email ou mot de passe incorrect." };
+  // Anti-brute-force : 10 tentatives / minute / IP.
+  const ip = (headers().get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+  if (!rateLimit(`admin-login:${ip}`, 10, 60_000)) {
+    return { ok: false, error: "Trop de tentatives. Réessayez dans une minute." };
+  }
+  // Les trois facteurs sont requis : email + mot de passe + code PIN.
+  const [credOk, pinOk] = await Promise.all([
+    verifyOwnerCredentials(email, password),
+    verifyOwnerPin(pin),
+  ]);
+  if (!credOk || !pinOk) {
+    // Message générique : ne révèle pas quel facteur est faux.
+    return { ok: false, error: "Email, mot de passe ou code PIN incorrect." };
   }
   const token = await createSessionToken();
   cookies().set(ADMIN_COOKIE, token, {

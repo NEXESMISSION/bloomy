@@ -53,3 +53,24 @@ export async function setOwnerCredentials(email: string, password: string): Prom
   const { error } = await db.from("settings").upsert(rows);
   if (error) throw new Error(error.message);
 }
+
+/** Vérifie le code PIN du propriétaire (base `settings`, repli env ADMIN_PIN). */
+export async function verifyOwnerPin(pin: string): Promise<boolean> {
+  const clean = (pin || "").trim();
+  if (!clean) return false;
+  const db = supabaseAdmin();
+  if (db) {
+    const { data } = await db.from("settings").select("value").eq("key", "admin_pin_hash").maybeSingle();
+    if (data?.value) return verifyPasswordHash(clean, String(data.value));
+  }
+  const envPin = (process.env.ADMIN_PIN || "").trim();
+  return envPin.length > 0 && eqConstTime(clean, envPin);
+}
+
+/** Définit (ou remplace) le code PIN du propriétaire (hash scrypt en base). */
+export async function setOwnerPin(pin: string): Promise<void> {
+  const db = supabaseAdmin();
+  if (!db) throw new Error("Supabase requis pour définir le PIN admin.");
+  const { error } = await db.from("settings").upsert([{ key: "admin_pin_hash", value: hashPassword(pin) }]);
+  if (error) throw new Error(error.message);
+}
