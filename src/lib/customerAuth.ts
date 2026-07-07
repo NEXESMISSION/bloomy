@@ -1,8 +1,8 @@
 import crypto from "crypto";
+import { resolveSessionSecret } from "@/lib/auth";
 
 /** Auth client (compte) — téléphone + mot de passe, cookie signé. Runtime Node. */
 export const CUSTOMER_COOKIE = "bloomy_customer";
-const SECRET = process.env.ADMIN_SESSION_SECRET || "dev-secret-bloomy-local-only";
 
 export function hashPassword(pw: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -20,7 +20,8 @@ export function verifyPasswordHash(pw: string, stored: string): boolean {
 }
 
 function sign(id: string): string {
-  return crypto.createHmac("sha256", SECRET).update(id).digest("hex");
+  const secret = resolveSessionSecret() || "dev-secret-bloomy-local-only";
+  return crypto.createHmac("sha256", secret).update(id).digest("hex");
 }
 
 export function customerToken(id: string): string {

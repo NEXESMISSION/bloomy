@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { optimizeToWebp } from "@/lib/image";
-import { ADMIN_COOKIE, createSessionToken, verifyCredentials } from "@/lib/auth";
+import { ADMIN_COOKIE, createSessionToken } from "@/lib/auth";
+import { verifyOwnerCredentials } from "@/lib/data/adminAuth";
 import { requireAdmin } from "@/lib/session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { updateOrderStatus, deleteOrder } from "@/lib/data/orders";
@@ -48,7 +49,7 @@ export async function login(
   email: string,
   password: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!verifyCredentials(email, password)) {
+  if (!(await verifyOwnerCredentials(email, password))) {
     return { ok: false, error: "Email ou mot de passe incorrect." };
   }
   const token = await createSessionToken();

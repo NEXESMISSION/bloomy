@@ -20,9 +20,22 @@ const DEV_DEFAULTS = new Set([
  * secret valide (fail-closed : on refuse alors d'émettre/valider toute session).
  */
 function getSecret(): string | null {
-  const s = process.env.ADMIN_SESSION_SECRET || "";
-  if (process.env.NODE_ENV === "production" && DEV_DEFAULTS.has(s)) return null;
-  return s || "dev-secret-bloomy-local-only";
+  const explicit = process.env.ADMIN_SESSION_SECRET || "";
+  // 1) Secret dédié explicite (recommandé) — priorité absolue.
+  if (explicit && !DEV_DEFAULTS.has(explicit)) return explicit;
+  // 2) Repli SANS variable dédiée : on dérive une clé forte et STABLE du
+  //    service_role Supabase, toujours présent en production (sinon l'app ne
+  //    tournerait pas). Évite d'exiger ADMIN_SESSION_SECRET sur l'hébergeur.
+  const svc = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (svc) return `bloomy-session-v1::${svc}`;
+  // 3) Ni l'un ni l'autre → dev local uniquement ; fail-closed en production.
+  if (process.env.NODE_ENV === "production") return null;
+  return "dev-secret-bloomy-local-only";
+}
+
+/** Secret de signature effectif (ou null si indisponible en production). */
+export function resolveSessionSecret(): string | null {
+  return getSecret();
 }
 
 function toHex(buf: ArrayBuffer): string {
