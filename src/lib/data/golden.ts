@@ -175,7 +175,12 @@ export async function processGoldenExpiries(batchId: string): Promise<number> {
       .select("id");
     if (!flipped || flipped.length === 0) continue; // déjà traité par un autre appel
 
-    // Réattribue à un ticket non utilisé, au hasard.
+    // Réattribue le gain à un ticket encore NON utilisé, au hasard — de façon
+    // ATOMIQUE : l'update n'attribue que si le ticket est toujours non révélé et
+    // non gagnant. Cela évite (a) d'attribuer à un ticket révélé « perdant » entre
+    // le SELECT et l'UPDATE (course), et (b) que deux expirations simultanées
+    // tombent sur le même ticket et fassent baisser le nombre réel de gagnants.
+    // Sur collision (0 ligne mise à jour), on retire le ticket et on en essaie un autre.
     const { data: pool } = await db
       .from("golden_tickets")
       .select("id")
@@ -183,9 +188,20 @@ export async function processGoldenExpiries(batchId: string): Promise<number> {
       .eq("revealed", false)
       .eq("is_winner", false)
       .eq("expired", false);
-    if (pool && pool.length) {
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      await db.from("golden_tickets").update({ is_winner: true }).eq("id", pick.id);
+    const candidates = (pool ?? []).map((p: any) => p.id as string);
+    while (candidates.length) {
+      const idx = Math.floor(Math.random() * candidates.length);
+      const pickId = candidates[idx];
+      const { data: won } = await db
+        .from("golden_tickets")
+        .update({ is_winner: true })
+        .eq("id", pickId)
+        .eq("revealed", false)
+        .eq("is_winner", false)
+        .eq("expired", false)
+        .select("id");
+      if (won && won.length) break; // gain réattribué avec succès
+      candidates.splice(idx, 1); // ticket devenu inéligible → on en essaie un autre
     }
   }
   return expired.length;
