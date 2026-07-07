@@ -51,7 +51,21 @@ export async function GET() {
   }
   if (s.shop_email) L.push(`- Email : ${s.shop_email}`);
   L.push("- Zone de livraison : toute la Tunisie (24 gouvernorats), 24–72 h");
-  L.push("- Paiement : à la livraison, en espèces");
+  L.push(
+    `- Frais de livraison : ${formatTND(s.delivery_fee)}, offerte dès ${formatTND(s.free_delivery_threshold)} d'achat`,
+  );
+  L.push("- Paiement : à la livraison, en espèces (cash on delivery), aucun paiement en ligne");
+  L.push("- Retours / échange : sous 48 h si l'article ne convient pas ou arrive abîmé");
+  L.push("");
+  L.push("## Questions fréquentes");
+  L.push("- **Comment payer ?** En espèces à la livraison, une fois le colis reçu. Aucun paiement en ligne.");
+  L.push(
+    `- **Délais de livraison ?** Partout en Tunisie sous 24 à 72 h, avec appel de confirmation après la commande.`,
+  );
+  L.push(
+    `- **Prix de la livraison ?** ${formatTND(s.delivery_fee)} partout en Tunisie, offerte dès ${formatTND(s.free_delivery_threshold)} d'achat.`,
+  );
+  L.push("- **Contenance ?** Eaux de toilette de 50 ml.");
   L.push("");
 
   return new Response(L.join("\n"), {

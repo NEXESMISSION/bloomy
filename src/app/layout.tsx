@@ -44,15 +44,20 @@ export const metadata: Metadata = {
     url: site.url,
     type: "website",
     locale: "fr_TN",
-    images: [{ url: "/photos/lineup.png", width: 1200, height: 630, alt: "Bloomy — collection de parfums" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Bloomy — collection de parfums pour homme" }],
   },
   twitter: {
     card: "summary_large_image",
     title: `${site.name} — Parfums pour homme en Tunisie`,
     description: site.description,
-    images: ["/photos/lineup.png"],
+    images: ["/og.png"],
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
+  authors: [{ name: site.name }],
+  creator: site.name,
+  publisher: site.name,
+  category: "shopping",
+  formatDetection: { telephone: true, email: true, address: false },
 };
 
 export const viewport: Viewport = {

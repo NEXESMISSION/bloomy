@@ -50,22 +50,62 @@ export default async function ProductPage({ params }: { params: { slug: string }
   ];
 
   const imageUrl = product.image?.startsWith("http") ? product.image : `${site.url}${product.image}`;
+  const priceValidUntil = new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
   const productLd = {
     "@type": "Product",
+    "@id": `${site.url}/produit/${product.slug}#product`,
     name: product.name,
     image: [imageUrl],
     description: product.description || product.tagline,
+    sku: product.id,
+    mpn: product.slug,
     brand: { "@type": "Brand", name: "Bloomy" },
     category: product.family,
+    inLanguage: "fr-TN",
+    additionalProperty: [
+      { "@type": "PropertyValue", name: "Contenance", value: `${product.size_ml} ml` },
+      ...(product.family ? [{ "@type": "PropertyValue", name: "Famille olfactive", value: product.family }] : []),
+    ],
     offers: {
       "@type": "Offer",
       url: `${site.url}/produit/${product.slug}`,
       priceCurrency: "TND",
       price: product.price,
+      priceValidUntil,
+      itemCondition: "https://schema.org/NewCondition",
       availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", "@id": `${site.url}/#organization`, name: "Bloomy" },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: settings.delivery_fee, currency: "TND" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "TN" },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "TN",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 2,
+        returnFees: "https://schema.org/FreeReturn",
+      },
     },
     ...(stats.count > 0
-      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: stats.avg, reviewCount: stats.count } }
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: stats.avg, reviewCount: stats.count, bestRating: 5, worstRating: 1 } }
+      : {}),
+    ...(reviews.length > 0
+      ? {
+          review: reviews.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.author_name },
+            datePublished: r.created_at?.slice(0, 10),
+            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+            reviewBody: r.comment,
+          })),
+        }
       : {}),
   };
   const jsonLd = {

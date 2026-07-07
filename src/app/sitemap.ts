@@ -21,12 +21,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let productRoutes: MetadataRoute.Sitemap = [];
   try {
     const products = await getProducts();
-    productRoutes = products.map((p) => ({
-      url: `${base}/produit/${p.slug}`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    }));
+    productRoutes = products.map((p) => {
+      const img = p.image?.startsWith("http") ? p.image : p.image ? `${base}${p.image}` : null;
+      return {
+        url: `${base}/produit/${p.slug}`,
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.8,
+        ...(img ? { images: [img] } : {}),
+      };
+    });
   } catch {
     /* en cas d'indisponibilité de la base, on renvoie au moins les routes statiques */
   }

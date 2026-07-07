@@ -28,10 +28,24 @@ const FAQS = [
   },
 ];
 
+const faqLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
 export default function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <section className="container-bloomy py-16 sm:py-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd).replace(/</g, "\\u003c") }}
+      />
       <div className="mx-auto max-w-3xl">
         <Reveal>
           <div className="text-center">

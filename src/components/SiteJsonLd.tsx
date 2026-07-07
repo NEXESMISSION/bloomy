@@ -13,12 +13,25 @@ export default function SiteJsonLd({ settings }: { settings: ShopSettings }) {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Organization",
+        "@type": ["Organization", "OnlineStore"],
         "@id": `${url}/#organization`,
         name: "Bloomy",
+        legalName: "Bloomy",
         url: `${url}/`,
-        logo: `${url}/brand/bloomy-wordmark-dark.png`,
+        logo: {
+          "@type": "ImageObject",
+          url: `${url}/icons/icon-512.png`,
+          width: 512,
+          height: 512,
+        },
+        image: `${url}/og.png`,
         description: site.description,
+        slogan: site.taglineFr,
+        foundingDate: "2026",
+        areaServed: { "@type": "Country", name: "Tunisia" },
+        knowsLanguage: ["fr", "ar"],
+        ...(settings.shop_email ? { email: settings.shop_email } : {}),
+        ...(settings.shop_phone ? { telephone: `+${phoneIntl(settings.shop_phone)}` } : {}),
         ...(sameAs.length ? { sameAs } : {}),
         ...(hasContact
           ? {
@@ -39,6 +52,7 @@ export default function SiteJsonLd({ settings }: { settings: ShopSettings }) {
         "@id": `${url}/#website`,
         url: `${url}/`,
         name: "Bloomy",
+        description: site.description,
         inLanguage: "fr-TN",
         publisher: { "@id": `${url}/#organization` },
       },
